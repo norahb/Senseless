@@ -1,3 +1,0 @@
-timestamp,overall_drift_detected,reconstruction_drift_detected,avg_reconstruction_error,S1_distance_drift_score,S1_distance_drift_detected,S2_distance_drift_score,S2_distance_drift_detected
-2025-09-25 18:08:52.735821,True,False,,0.954272919915374,True,0.9480258889799316,True
-2025-09-25 18:13:02.708746,True,False,,0.9542729199153741,True,0.9480258889799316,True

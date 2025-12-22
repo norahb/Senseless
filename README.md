@@ -1,34 +1,48 @@
-# SenseLess Deployment Pipeline
+# SenseLess: Minimal Vision, Maximum Insight for Smart Homes 
+SenseLess is a privacy-aware hybrid anomaly detection framework for smart indoor environments. It combines non-vision sensors with selective vision support to improve reliability while minimising visual exposure. The system automatically generates image labels without manual annotation by aligning sensor-detected events with camera data. These labels are further refined using self-supervised visual representations.
 
-## Short system description
-SenseLess is a hybrid anomaly detection framework where non-vision sensors run continuously as the primary detector, and the vision model activates only when sensor confidence is low, errors are detected, or drift is suspected. Vision outputs both validate decisions and provide trusted feedback for self-healing retraining of the non-vision model.
+During deployment, SenseLess relies primarily on non-vision sensors. The vision model is activated only when predictions are uncertain or when sensor drift is detected. This design preserves privacy while maintaining robustness and long-term adaptability.
 
-## Long description
-The paper introduces *SenseLess*, a hybrid anomaly detection framework in which non-vision sensors operate continuously as the primary detection modality, while vision is used sparingly and conditionally to augment non-vision decisions. To enable this visual augmentation, the system must first train a reliable vision-based anomaly detector, which requires labelled image data that are typically unavailable in indoor environments. During training, SenseLess automatically generates image labels without manual annotation by combining sensor-guided anomaly detection and self-supervised visual clustering. These components are integrated through a confidence-weighted label refinement process that yields a high-quality self-labelled image dataset. This design addresses the scarcity of annotated image data highlighted in the thesis and establishes the visual models required to support selective, confidence-driven camera activation during deployment.
+---
 
-A central methodological contribution of the paper is the introduction of the Hierarchical Event-Driven Synchronization (HEDS) algorithm, which estimates and compensates for heterogeneous sensor response delays during sensor–image alignment. As demonstrated through both quantitative evaluation and ablation analysis, delay-aware alignment improves labeling accuracy in scenarios characterised by gradual environmental responses, such as door openings and occupancy changes. This contribution operationalises the observation, established through empirical analysis in this work, that temporal misalignment between sensor and image data is a critical barrier to effective multimodal learning and must be addressed to enable reliable cross-modal supervision.
+## Training pipeline (run first)
+1. **Configure training**  
+   - Edit `training/config/config_manager.py` for data paths, model/save dirs, and use-case settings.
+2. **Prepare data**  
+   - Sensor CSVs and image folders should be organized per use case.  
+   - Optional: place existing models under `training/models/` to warm-start.
+3. **Run main training**  
+   ```bash
+   python training/main_training.py --use_case door
+   ```
+   Key stages inside `main_training.py`:
+    - **Non-vision model training** (`training/non_vision_subsystem/train_adaptive_autoencoder.py`, etc.).
+    - **Delay-aware alignment (HEDS)** (`training/non_vision_subsystem/dynamic_delay_calibration.py`, `delay_calculation.py`) to compensate heterogeneous sensor/image delays.
+   - **Sensor-guided anomaly detection** (`training/non_vision_subsystem/detect_anomalies.py`) → pseudo event labels (non-vision).
+   - **Self-supervised visual clustering** (`training/ssl_subsystem/ssl_train_cluster.py`) → visual clusters.
+   - **Confidence-weighted label refinement** (`training/label_refinement_subsystem/refine_labels.py`) → high-quality image pseudo-labels.
+   - **Vision classifier training** (`training/camera_anomaly_detection/train_image_classifier.py`).
 
-During deployment, the system adopts a confidence-aware decision pipeline in which the non-vision anomaly detector runs continuously, and the vision model is activated only when sensor predictions are uncertain, erroneous, or affected by drift. Vision-based decisions are used both for immediate validation and as trusted feedback signals for retraining the non-vision model through a self-healing mechanism. Experimental results show that this selective activation strategy limits visual processing to less than 4% of operating time while enabling recovery from performance degradation caused by environmental change. These findings demonstrate that cameras can enhance robustness and adaptability without continuous monitoring, supporting privacy-preserving deployment in real homes.
+4. **Artifacts produced**
+   - Vision and non-vision models under `deployment/models/<use_case>/` (or copy from `training/models/`).
+   - Refined pseudo-labels / logs under `training/data/` and `training/figures/` (as configured).
 
-## Repository layout (deployment-side)
-- [`deployment/main_deployment.py`](deployment/main_deployment.py): Entry point for running the full deployment pipeline.
-- [`deployment/config/config_deployment.py`](deployment/config/config_deployment.py): Deployment configuration (paths, toggles, thresholds).
-- [`deployment/sensor_inference.py`](deployment/sensor_inference.py): Non-vision inference wrapper.
-- [`deployment/uncertainty/confidence_estimation.py`](deployment/uncertainty/confidence_estimation.py): Confidence estimation and calibration.
-- [`deployment/uncertainty/fallback_manager.py`](deployment/uncertainty/fallback_manager.py): Vision fallback activation for low-confidence or sensor-error cases.
-- [`deployment/drift_detection/baseline_manager.py`](deployment/drift_detection/baseline_manager.py) and [`deployment/drift_detection/drift_detector.py`](deployment/drift_detection/drift_detector.py): Baseline maintenance and drift detection.
-- [`deployment/retraining/retraining_manager.py`](deployment/retraining/retraining_manager.py): Automatic retraining coordinator.
-- Logs and outputs: `logs/<use_case>/decisions.csv`, `logs/<use_case>/drift_history.csv`, `alerts/`.
+### Training-related entry points and modules
+- `training/non_vision_subsystem/train_adaptive_autoencoder.py`: Non-vision anomaly model training.
+- `training/non_vision_subsystem/dynamic_delay_calibration.py`: HEDS-based delay compensation.
+- `training/non_vision_subsystem/detect_anomalies.py`: Non-vision inference utilities (training/eval).
+- `training/ssl_subsystem/ssl_train_cluster.py`: Self-supervised visual clustering.
+- `training/label_refinement_subsystem/refine_labels.py`: Confidence-weighted label refinement.
+- `training/camera_anomaly_detection/train_image_classifier.py`: Vision model training.
+- `training/main_training.py`: Orchestrates the full training workflow.
+- `training/migration_utility.py`: Utilities for migrating/aligning artifacts.
 
-## Prerequisites
-- Python 3.9+ and required dependencies (install via your environment or `pip install -r requirements.txt` if provided).
-- Trained models and data paths configured in [`DeploymentConfig`](deployment/config/config_deployment.py).
-- Incoming sensor CSV and image timestamp CSV paths set per use case in `DeploymentConfig.use_case_config`.
-- Vision and sensor models placed under `deployment/models/<use_case>/`.
+---
 
-## Quickstart (deployment)
-1. Activate your environment and set working directory to repository root.
-2. Run the deployment pipeline for a chosen use case (e.g., `door`):
+## Deployment pipeline (after training artifacts are ready)
+### Quickstart
+1. Ensure trained artifacts are placed under `deployment/models/<use_case>/` and paths are correct in `deployment/config/config_deployment.py`.
+2. From repo root, run:
    ```bash
    python deployment/main_deployment.py --use_case door
    ```
@@ -37,31 +51,31 @@ During deployment, the system adopts a confidence-aware decision pipeline in whi
    - Alerts: `alerts/`
    - Drift history (if enabled): `logs/door/drift_history.csv`
 
-## Pipeline stages (toggled in [`main_deployment.py`](deployment/main_deployment.py))
-1. **Sensor inference** (non-vision): [`run_sensor_model`](deployment/sensor_inference.py) produces predictions/logits.
-2. **Confidence estimation**: [`estimate_confidence`](deployment/uncertainty/confidence_estimation.py) calibrates scores and marks low-confidence rows.
-3. **Vision fallback**: [`vision_fallback`](deployment/uncertainty/fallback_manager.py) runs vision only for low-confidence or sensor-error cases.
-4. **Drift detection** (optional): [`detect_drift`](deployment/drift_detection/drift_detector.py); baseline maintenance via [`update_baseline`](deployment/drift_detection/baseline_manager.py).
-5. **Auto-retraining** (optional): [`RetrainingManager.trigger_retraining`](deployment/retraining/retraining_manager.py) when drift is flagged.
+### Pipeline stages (toggle in `deployment/main_deployment.py`)
+1. **Sensor inference** (non-vision): `deployment/sensor_inference.py` → predictions/logits.
+2. **Confidence estimation**: `deployment/uncertainty/confidence_estimation.py` → calibrated scores, low-confidence flags.
+3. **Vision fallback**: `deployment/uncertainty/fallback_manager.py` → vision only for low-confidence or sensor-error cases.
+4. **Drift detection** (optional): `deployment/drift_detection/drift_detector.py`; baseline upkeep via `deployment/drift_detection/baseline_manager.py`.
+5. **Auto-retraining** (optional): `deployment/retraining/retraining_manager.py` when drift is flagged.
 
-To adjust which stages run, set the toggles in [`main_deployment.py`](deployment/main_deployment.py) (e.g., `config.enable_drift_detection`, `config.enable_auto_retraining`).
+Adjust toggles in `main_deployment.py` (e.g., `config.enable_drift_detection`, `config.enable_auto_retraining`, `config.enable_vision_fallback`).
 
-## Notes on configuration
-- Use-case-specific paths (sensor CSV, image folder, timestamps CSV, models) are resolved in [`DeploymentConfig`](deployment/config/config_deployment.py). Ensure `use_case_config` entries are correct.
-- Drift/retraining thresholds: `config.drift_threshold`, `config.performance_threshold`, `config.min_samples_for_retraining`.
-- Vision fallback thresholds: see [`fallback_manager.py`](deployment/uncertainty/fallback_manager.py) for confidence cutoffs and matching rules.
+### Deployment configuration notes
+- Use-case paths (sensor CSV, image folder, models) are set in `deployment/config/config_deployment.py` (`use_case_config`).
+---
 
-## Training pipeline (high level)
-- Self-supervised vision clustering and pseudo-labeling: see [`training/ssl_subsystem`](training/ssl_subsystem) modules (e.g., `ssl_train_cluster.py` and `old_versions` for experimental variants).
-- Label refinement combining vision + sensors: [`training/label_refinement_subsystem/refine_labels.py`](training/label_refinement_subsystem/refine_labels.py).
-- Non-vision anomaly training and delay calibration: [`training/non_vision_subsystem`](training/non_vision_subsystem) (e.g., `detect_anomalies.py`, `dynamic_delay_calibration.py`).
+## Repository layout (selected)
+- Training: `training/` (see modules above).
+- Deployment: `deployment/main_deployment.py`, `deployment/config/config_deployment.py`, `deployment/sensor_inference.py`, `deployment/uncertainty/`, `deployment/drift_detection/`, `deployment/retraining/`.
+- Models: `deployment/models/<use_case>/`
+- Logs/alerts: `logs/<use_case>/`, `alerts/`
 
-## Typical workflow
-1. Prepare data and train sensor + vision models using the training scripts.
-2. Place trained artifacts under `deployment/models/<use_case>/`.
-3. Configure paths/toggles in [`config_deployment.py`](deployment/config/config_deployment.py).
+---
+
+## Typical end-to-end workflow
+1. Configure and run training (`training/main_training.py`) to produce sensor + vision models.
+2. Place/copy trained artifacts into `deployment/models/<use_case>/`.
+3. Configure deployment paths/toggles in `deployment/config/config_deployment.py`.
 4. Run the deployment pipeline.
 5. Monitor `logs/<use_case>/decisions.csv`, drift history, and alerts; enable auto-retraining if desired.
 
-## Support
-For issues with deployment stages, check the printed logs from `main_deployment.py`, the decision log under `logs/<use_case>/`, and module-specific outputs in `alerts/` and `logs/<use_case>/`.

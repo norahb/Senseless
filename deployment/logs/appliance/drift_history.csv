@@ -1,3 +1,0 @@
-timestamp,overall_drift_detected,reconstruction_drift_detected,avg_reconstruction_error,Temperature_drift_score,Temperature_drift_detected,Humidity_drift_score,Humidity_drift_detected,CO2_drift_score,CO2_drift_detected
-2025-09-25 18:25:58.807435,True,False,,0.9999999955865396,True,0.9951985095413816,True,0.9464798260817356,True
-2025-09-28 17:05:43.565718,True,False,,0.9999999955865396,True,0.9951985095413817,True,0.9464798260817356,True
