@@ -1,0 +1,5 @@
+timestamp,overall_drift_detected,reconstruction_drift_detected,avg_reconstruction_error,CO2_drift_score,CO2_drift_detected
+2025-08-13 10:53:34.388415,True,False,,0.9871315144876168,True
+2025-09-24 18:54:30.940336,True,False,,0.9999999998009274,True
+2025-09-24 19:32:01.143222,True,False,,0.9999999998009274,True
+2025-09-24 19:58:27.925181,True,False,,0.9999999998009274,True

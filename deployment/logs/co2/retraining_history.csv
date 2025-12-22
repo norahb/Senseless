@@ -1,0 +1,5 @@
+timestamp,retrain_id,action,success,reason,performance_improvement,training_samples
+2025-08-13T10:53:35.276142,retrain_20250813_105334,rejected,False,Insufficient improvement: 0.007 < 0.02,0.0072529658554488,0
+2025-09-24T18:54:46.123708,retrain_20250924_185431,deployed,True,,0.0,13406
+2025-09-24T19:32:17.148431,retrain_20250924_193201,deployed,True,,0.0,13407
+2025-09-24T19:58:42.998605,retrain_20250924_195827,deployed,True,,0.0,13407
