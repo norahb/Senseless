@@ -59,7 +59,7 @@ USE_CASE_CONFIGS = {
         sensor_error_thresholds={
             "Temperature": {"min": 10, "max": 40},
             "Humidity": {"min": 20, "max": 95},
-            "Pressure": {"min": 99000,"max": 102000}
+            "Pressure": {"min": 94000,"max": 102000}
         },
         mild_outlier_zscore=4.0,
         extreme_corruption_zscore=6.0

@@ -1,0 +1,28 @@
+{
+  "lab_baseline_delays": {
+    "Temperature": 3.36,
+    "Humidity": 1.8,
+    "Pressure": 1.25
+  },
+  "measured_onsite_delays": {
+    "Temperature": 3.1727343144848956,
+    "Humidity": 2.916815514161776,
+    "Pressure": 3.8361239757748486
+  },
+  "lab+onsite_delays": {
+    "Temperature": 3.3038202943454684,
+    "Humidity": 2.135044654248533,
+    "Pressure": 2.0258371927324546
+  },
+  "final_calibrated_delays_with_reference_sensor": {
+    "Temperature": 3.3038202943454684,
+    "Humidity": 2.135044654248533,
+    "Pressure": 2.0258371927324546
+  },
+  "human_adjusted_delays": {},
+  "onsite+human_delays": {
+    "Temperature": 3.1727343144848956,
+    "Humidity": 2.916815514161776,
+    "Pressure": 3.8361239757748486
+  }
+}

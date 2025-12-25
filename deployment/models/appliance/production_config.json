@@ -1,0 +1,50 @@
+{
+  "model_type": "adaptive_autoencoder",
+  "optimal_sensitivity": "low",
+  "selection_score": 0.9644247206249046,
+  "final_performance": {
+    "test_accuracy": 0.9972152816189513,
+    "test_macro_f1": 0.9758048443372878,
+    "normal_f1": 0.9985650917620542,
+    "anomaly_f1": 0.9530445969125214
+  },
+  "method_selection": "autoencoder",
+  "method_performance": {
+    "autoencoder": 0.95,
+    "isolation": 0.54,
+    "outlier": 0.53
+  },
+  "sensitivity_comparison": {
+    "low": {
+      "val_accuracy": 0.997067579541905,
+      "test_accuracy": 0.9972152816189513,
+      "test_balance_score": 0.9530445969125214,
+      "test_macro_f1": 0.9758048443372878,
+      "overall_score": 0.9644247206249046
+    },
+    "medium": {
+      "val_accuracy": 0.997067579541905,
+      "test_accuracy": 0.9972152816189513,
+      "test_balance_score": 0.9530445969125214,
+      "test_macro_f1": 0.9758048443372878,
+      "overall_score": 0.9644247206249046
+    },
+    "high": {
+      "val_accuracy": 0.997067579541905,
+      "test_accuracy": 0.9972152816189513,
+      "test_balance_score": 0.9530445969125214,
+      "test_macro_f1": 0.9758048443372878,
+      "overall_score": 0.9644247206249046
+    }
+  },
+  "data_cleaning": {
+    "training_cleaning_enabled": true,
+    "val_test_sensor_error_fixing": true,
+    "sensor_ranges_used": true
+  },
+  "feature_importance": {
+    "Temperature": 0.11401951954001877,
+    "Humidity": 0.08415160855919845,
+    "CO2": 0.025623472776017342
+  }
+}

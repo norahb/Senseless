@@ -1,0 +1,15 @@
+{
+  "lab_baseline_delays": {
+    "CO2": 6.87
+  },
+  "measured_onsite_delays": {
+    "CO2": 2.8774928774928776
+  },
+  "lab+onsite_delays": {
+    "CO2": 5.672247863247863
+  },
+  "final_calibrated_delays_with_reference_sensor": {
+    "CO2": 5.672247863247863
+  },
+  "human_adjusted_delays": {}
+}

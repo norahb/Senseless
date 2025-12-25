@@ -1,0 +1,48 @@
+{
+  "model_type": "adaptive_autoencoder",
+  "optimal_sensitivity": "low",
+  "selection_score": 0.6498740764124641,
+  "final_performance": {
+    "test_accuracy": 0.9387298378124066,
+    "test_macro_f1": 0.7556353754939286,
+    "normal_f1": 0.9671579736568575,
+    "anomaly_f1": 0.5441127773309996
+  },
+  "method_selection": "autoencoder",
+  "method_performance": {
+    "autoencoder": 0.454,
+    "isolation": 0.41,
+    "outlier": 0.41
+  },
+  "sensitivity_comparison": {
+    "low": {
+      "val_accuracy": 0.9394327678861711,
+      "test_accuracy": 0.9387298378124066,
+      "test_balance_score": 0.5441127773309996,
+      "test_macro_f1": 0.7556353754939286,
+      "overall_score": 0.6498740764124641
+    },
+    "medium": {
+      "val_accuracy": 0.9394327678861711,
+      "test_accuracy": 0.9387298378124066,
+      "test_balance_score": 0.5441127773309996,
+      "test_macro_f1": 0.7556353754939286,
+      "overall_score": 0.6498740764124641
+    },
+    "high": {
+      "val_accuracy": 0.9394327678861711,
+      "test_accuracy": 0.9387298378124066,
+      "test_balance_score": 0.5441127773309996,
+      "test_macro_f1": 0.7556353754939286,
+      "overall_score": 0.6498740764124641
+    }
+  },
+  "data_cleaning": {
+    "training_cleaning_enabled": true,
+    "val_test_sensor_error_fixing": true,
+    "sensor_ranges_used": true
+  },
+  "feature_importance": {
+    "CO2": 1.948874538490032e-06
+  }
+}

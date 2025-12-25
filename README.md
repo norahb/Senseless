@@ -16,7 +16,7 @@ During deployment, SenseLess relies primarily on non-vision sensors. The vision 
    python training/main_training.py --use_case door
    ```
    Key stages inside `main_training.py`:
-    - **Non-vision model training** (`training/non_vision_subsystem/train_adaptive_autoencoder.py`, etc.).
+    - **Non-vision model training** (`training/non_vision_subsystem/train_adaptive_autoencoder.py`).
     - **Delay-aware alignment (HEDS)** (`training/non_vision_subsystem/dynamic_delay_calibration.py`, `delay_calculation.py`) to compensate heterogeneous sensor/image delays.
    - **Sensor-guided anomaly detection** (`training/non_vision_subsystem/detect_anomalies.py`) → pseudo event labels (non-vision).
    - **Self-supervised visual clustering** (`training/ssl_subsystem/ssl_train_cluster.py`) → visual clusters.
@@ -76,6 +76,62 @@ Adjust toggles in `main_deployment.py` (e.g., `config.enable_drift_detection`, `
 1. Configure and run training (`training/main_training.py`) to produce sensor + vision models.
 2. Place/copy trained artifacts into `deployment/models/<use_case>/`.
 3. Configure deployment paths/toggles in `deployment/config/config_deployment.py`.
-4. Run the deployment pipeline.
-5. Monitor `logs/<use_case>/decisions.csv`, drift history, and alerts; enable auto-retraining if desired.
+4. Use the deployment pipeline for offline simulation/validation.
+5. For live hardware streaming, use the real-time module (`live_inference/`).
+6. Monitor outputs: offline under `logs/<use_case>/decisions.csv`; live under `live_inference/logs/<use_case>/` and `live_inference/alerts/<use_case>/`.
+
+---
+
+## Real-Time Live Inference (hardware streaming)
+SenseLess also includes a real-time streaming pipeline that connects to an Arduino (Bluetooth/serial) for on-device sensor readings and activates the camera only when needed. This is the runtime module intended for field deployment.
+
+### What it does
+- Reads sensor values live from an Arduino on a given COM/serial port.
+- Runs the trained non-vision model (adaptive autoencoder) per sample.
+- Applies mandatory isotonic calibration to confidence (requires `sensor_isotonic.pkl`).
+- Triggers the vision fallback selectively when confidence is low or a sensor error occurs.
+- Logs streaming data for later retraining.
+
+### Differences vs the Deployment module
+- Real-time (`live_inference/`) is hardware‑connected and streaming; it drives end‑to‑end decisions on live inputs and captures images on demand.
+- Deployment (`deployment/`) is a simulation/testing pipeline operating on recorded CSVs and images; it’s ideal for functional validation, offline experiments, and integration checks without hardware.
+- Real-time writes outputs under `live_inference/` (e.g., logs, optional fallback images); the simulation writes under `logs/` and `alerts/`.
+
+### Requirements
+- Trained artifacts placed under `deployment/models/<use_case>/`:
+   - Non‑vision model folder (e.g., `adaptive_<use_case>.pkl` and scaler inside that directory)
+   - Vision classifier (e.g., `door_mobilenetv2.pth`)
+   - Isotonic calibration: `sensor_isotonic.pkl` (mandatory for adaptive confidence)
+- Arduino connected over serial/Bluetooth (e.g., `COM7` on Windows).
+- Optional webcam/camera for vision fallback.
+
+### Quickstart (Windows example)
+From the repo root:
+
+```powershell
+python -m live_inference.main_live_inference --use_case door --arduino_port COM7 --log_level WARNING
+```
+
+Useful flags:
+- `--compact`: print minimal per-sample output
+- `--preview`: show brief camera preview when capturing
+- `--preview_ms 1500`: preview window display duration in ms
+- `--save_images`: persist captured fallback images (default per use case)
+
+Example:
+
+```powershell
+python -m live_inference.main_live_inference --use_case door --arduino_port COM7 --log_level WARNING --compact --preview --preview_ms 1500 --save_images
+```
+
+### Outputs
+- Sensor stream log: `live_inference/logs/<use_case>/incoming_sensor_data.csv`
+- Alerts: `live_inference/alerts/<use_case>/`
+- Fallback images (if enabled): `live_inference/fallback_images/<use_case>/`
+
+### Notes & troubleshooting
+- If you see `Isotonic calibration model missing (required)`, place `sensor_isotonic.pkl` under `deployment/models/<use_case>/`.
+- COM port may differ (e.g., `COM3`, `COM7`). Verify your Arduino port.
+- The camera index defaults to 0 and falls back to 1 if needed; use `--preview` to verify capture.
+- Physical bounds for sensors are defined per use case in `deployment/config/use_case_configs.py` (e.g., door pressure range).
 

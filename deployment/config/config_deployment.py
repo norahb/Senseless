@@ -31,8 +31,16 @@ class DeploymentConfig:
         self.enable_human_review = False
 
         # === Model Paths (absolute paths to avoid redundancy) ===
+        # Always load models from deployment folder
         self.sensor_model_path = os.path.abspath(os.path.join(deployment_dir, "models", use_case_name))
-        self.vision_model_path = self.use_case_config.vision_model_path
+        vision_filenames = {
+            "door": "door_mobilenetv2.pth",
+            "appliance": "appliance_mobilenetv2.pth",
+            "abnormal_object": "abnormal_object_mobilenetv2.pth",
+            "co2": "teacher.pt",
+        }
+        default_vision_name = vision_filenames.get(use_case_name, f"{use_case_name}_mobilenetv2.pth")
+        self.vision_model_path = os.path.abspath(os.path.join(deployment_dir, "models", use_case_name, default_vision_name))
 
         # === Data Paths ===
         self.incoming_sensor_data_path = self.use_case_config.inference_csv_path

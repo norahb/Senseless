@@ -1,0 +1,17 @@
+{
+    "Temperature": {
+        "type": "gaussian",
+        "mean": 228.99566460286596,
+        "std": 385.2471263649881
+    },
+    "Humidity": {
+        "type": "gaussian",
+        "mean": 27.64101180334335,
+        "std": 27.945576446466056
+    },
+    "Pressure": {
+        "type": "gaussian",
+        "mean": 2195.6720772510253,
+        "std": 2050.2725642149126
+    }
+}

@@ -1,0 +1,12 @@
+{
+  "sensor_names": [
+    "Temperature",
+    "Humidity",
+    "CO2"
+  ],
+  "adaptation_window": 1000,
+  "min_training_samples": 500,
+  "drift_detection_threshold": 0.3,
+  "auto_retrain_threshold": 0.5,
+  "case_name": "appliance"
+}

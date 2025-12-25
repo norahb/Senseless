@@ -1,0 +1,43 @@
+{
+  "model_type": "adaptive_autoencoder",
+  "optimal_sensitivity": "low",
+  "selection_score": 0.5499296844490895,
+  "final_performance": {
+    "test_accuracy": 0.8014537107880643,
+    "test_macro_f1": 0.6597299190599912,
+    "normal_f1": 0.8793303882817949,
+    "anomaly_f1": 0.4401294498381877
+  },
+  "sensitivity_comparison": {
+    "low": {
+      "val_accuracy": 0.8085922516302263,
+      "test_accuracy": 0.8014537107880643,
+      "test_balance_score": 0.4401294498381877,
+      "test_macro_f1": 0.6597299190599912,
+      "overall_score": 0.5499296844490895
+    },
+    "medium": {
+      "val_accuracy": 0.8085922516302263,
+      "test_accuracy": 0.8014537107880643,
+      "test_balance_score": 0.4401294498381877,
+      "test_macro_f1": 0.6597299190599912,
+      "overall_score": 0.5499296844490895
+    },
+    "high": {
+      "val_accuracy": 0.07825086306098965,
+      "test_accuracy": 0.07804131599081866,
+      "test_balance_score": 0.0,
+      "test_macro_f1": 0.0723917672107878,
+      "overall_score": -0.563804116394606
+    }
+  },
+  "data_cleaning": {
+    "training_cleaning_enabled": true,
+    "val_test_sensor_error_fixing": true,
+    "sensor_ranges_used": true
+  },
+  "feature_importance": {
+    "S1_distance": 1.857083760262372e-05,
+    "S2_distance": 1.520671247987681e-06
+  }
+}
