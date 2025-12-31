@@ -334,51 +334,6 @@ class SensorDelayDetector:
 
         return anomaly_start_idx, threshold_crossing_idx
 
-    # def _find_anomaly_boundaries(self, error_series: np.ndarray, threshold: float, 
-    #                         event_start_idx: int, event_end_idx: int) -> Tuple[int, int]:
-    #     """
-    #     Find the actual anomaly start and first threshold crossing within an event.
-        
-    #     Returns:
-    #     --------
-    #     anomaly_start_idx : int
-    #         Index where anomaly actually begins (before threshold crossing)
-    #     threshold_crossing_idx : int  
-    #         Index where error first crosses threshold
-    #     """
-        
-    #     # === 1. Find threshold crossing (first index where error > threshold) ===
-    #     threshold_crossing_idx = event_start_idx  # Default to detected start
-        
-    #     for idx in range(event_start_idx, event_end_idx + 1):
-    #         if error_series[idx] > threshold:
-    #             threshold_crossing_idx = idx
-    #             break
-        
-    #     # === 2. Find anomaly start (look backwards from threshold crossing) ===
-    #     anomaly_start_idx = threshold_crossing_idx  # Default
-        
-    #     # Look backward from threshold crossing to find where anomaly actually started
-    #     # (where error began increasing from baseline)
-    #     baseline_window = 10  # samples to look back
-    #     start_search = max(0, threshold_crossing_idx - baseline_window)
-        
-    #     if start_search < threshold_crossing_idx:
-    #         # Calculate baseline (median of recent normal values)
-    #         baseline_errors = error_series[start_search:threshold_crossing_idx]
-    #         baseline = np.median(baseline_errors)
-            
-    #         # Find where error started rising above baseline
-    #         rise_threshold = baseline * 1.5  # 50% above baseline
-            
-    #         for idx in range(threshold_crossing_idx - 1, start_search - 1, -1):
-    #             if error_series[idx] <= rise_threshold:
-    #                 anomaly_start_idx = idx + 1  # Start of rise
-    #                 break
-    #         else:
-    #             anomaly_start_idx = start_search
-        
-    #     return anomaly_start_idx, threshold_crossing_idx
 
     def calculate_delays(self, sensor_data, use_case: str = "default"):
         if not self.detected_anomalies:
@@ -439,16 +394,6 @@ class SensorDelayDetector:
 
             event_delays = []
             for event in events:
-                # print(f"[DEBUG] Event fields: {list(event.keys())}")  
-                # print(f"[DEBUG] Event sample: {event}")
-                # start_time = event.get('anomaly_start_time') or event.get('start_time')
-                # end_time = event.get('peak_time') or event.get('threshold_crossing_time') or event.get('stabilization_time')
-                # if start_time is None or end_time is None:
-                #     continue
-                # delay = (end_time.replace(tzinfo=None) - start_time.replace(tzinfo=None)).total_seconds()
-                # if abs(delay) > 300:  # Allow up to 5 minutes delay in either direction
-                #     continue
-                # event_delays.append(delay)
 
                 start_time = event.get('anomaly_start_time') or event.get('start_time')
                 # Prefer threshold crossing to match lab definition (first detection)
@@ -542,134 +487,6 @@ class SensorDelayDetector:
             "onsite+human_delays": self.onsite_human_delays  
         }
 
-    # === UPDATE: Calculate delays using threshold crossing ===
-    # def calculate_delays(self, sensor_data: Dict[str, pd.DataFrame], use_case: str = "default") -> Dict[str, Dict[str, float]]:
-    #     if not self.detected_anomalies:
-    #         self.detect_anomalies(sensor_data)
-
-    #     if self.config["use_human_delay"] and self.config["human_review_figures"]:
-    #         self.human_adjusted_delays = self.plot_human_review_figures(sensor_data, use_case)
-
-    #     delays = {}
-    #     delay_limit = self.config.get("delay_acceptance_limit", 60)
-    #     lab_weight, onsite_weight = self.config.get("lab_onsite_weight", [0.5, 0.5])
-
-    #     ref_sensor_id = self.config.get("reference_sensor_id")
-    #     ref_delay = self.baseline_delays.get(ref_sensor_id) if ref_sensor_id else None
-    #     ref_strategy = self.config.get("reference_strategy", "median_consensus")
-
-    #     print("\n⏰ Onsite Delay Measurement Results:")
-        
-    #     for sensor_id, events in self.detected_anomalies.items():
-    #         # Skip IRS sensors
-    #         sensor_type = None
-    #         if self.sensor_metadata:
-    #             sensor_type = self.sensor_metadata.get(sensor_id)
-    #         elif 'sensor_metadata' in self.config:
-    #             sensor_type = self.config["sensor_metadata"].get(sensor_id)
-
-    #         if sensor_type and sensor_type.upper() == "IRS":
-    #             self.onsite_delays[sensor_id] = 0.0
-    #             self.unadjusted_delays[sensor_id] = 0.0
-    #             self.calibrated_delays[sensor_id] = 0.0
-    #             print(f"  📊 {sensor_id}: 0.00s (IRS sensor - no delay)")
-    #             logger.info(f"Skipped delay calibration for IRS sensor: {sensor_id}")
-    #             continue
-
-    #         if not events:
-    #             print(f"  ⚠️ {sensor_id}: No events detected for onsite measurement")
-    #             continue
-
-    #         event_delays = []
-    #         for event in events:
-    #             # print(f"DEBUG: Event fields: {list(event.keys())}")  
-    #             # === COMPATIBILITY FIX: Handle both old and new field names ===
-    #             # Try new field names first, fallback to old ones
-    #             start_time = event.get('anomaly_start_time') or event.get('start_time')
-    #             end_time = event.get('threshold_crossing_time') or event.get('peak_time') or event.get('stabilization_time')
-                
-    #             if start_time is None or end_time is None:
-    #                 continue
-                    
-    #             # Calculate delay
-    #             #delay = (end_time.replace(tzinfo=None) - start_time.replace(tzinfo=None)).total_seconds()
-    #             # Calculate delay: Use peak_time instead of threshold_crossing_time
-    #             end_time = event.get('peak_time') or event.get('threshold_crossing_time') or event.get('stabilization_time')
-    #             delay = (end_time.replace(tzinfo=None) - start_time.replace(tzinfo=None)).total_seconds()
-                
-    #             if self.debug:
-    #                 print(f"[DEBUG] {sensor_id} delay: {delay:.2f} sec")
-                    
-    #             # Filter unrealistic delays
-    #             if delay > delay_limit or delay < 0:
-    #                 continue
-                    
-    #             event_delays.append(delay)
-
-    #         if event_delays:
-    #             # Remove outliers using IQR
-    #             q1 = np.percentile(event_delays, 25)
-    #             q3 = np.percentile(event_delays, 75)
-    #             iqr = q3 - q1
-    #             lower_bound = q1 - 1.5 * iqr
-    #             upper_bound = q3 + 1.5 * iqr
-    #             filtered_delays = [d for d in event_delays if lower_bound <= d <= upper_bound]
-    #             avg_delay = np.mean(filtered_delays) if filtered_delays else np.mean(event_delays)
-
-    #             self.onsite_delays[sensor_id] = avg_delay
-    #             print(f"  📊 {sensor_id}: {avg_delay:.2f}s (from {len(event_delays)} events)")
-                
-    #             baseline = self.baseline_delays.get(sensor_id, 0.0)
-    #             final_delay = lab_weight * baseline + onsite_weight * avg_delay if baseline else avg_delay
-    #             self.unadjusted_delays[sensor_id] = final_delay
-
-    #             if self.config["use_reference_sensor"] and ref_delay and sensor_id != ref_sensor_id:
-    #                 logger.info(f"Applying reference sensor strategy for {sensor_id} using reference sensor {ref_sensor_id}")
-    #                 final_delay = self.apply_reference_strategy(final_delay, ref_delay, ref_strategy)
-
-    #             # if sensor_id in self.human_adjusted_delays:
-    #             #     human_delay = self.human_adjusted_delays[sensor_id]
-    #             #     # final_delay = 0.5 * final_delay + 0.5 * human_delay
-    #             #     final_delay = 0.75 * final_delay + 0.25 * human_delay
-    #             #     logger.info(f"Blended delay for {sensor_id}: {final_delay:.2f}s (human: {human_delay:.2f})")
-                
-    #         #     delays[sensor_id] = final_delay
-    #         #     self.calibrated_delays[sensor_id] = final_delay
-    #         # else:
-    #         #     print(f"  ⚠️ {sensor_id}: No valid delays after filtering")
-
-    #         if sensor_id in self.human_adjusted_delays:
-    #             human_delay = self.human_adjusted_delays[sensor_id]
-    #             if abs(human_delay) < 1.0:  # If human agrees (within 1 second)
-    #                 # Don't blend, just use lab+onsite delay
-    #                 logger.info(f"Human agrees with {sensor_id} timing (diff: {human_delay:.2f}s) - keeping lab+onsite delay: {final_delay:.2f}s")
-    #             else:
-    #                 # Only blend when human strongly disagrees
-    #                 original_delay = final_delay
-    #                 final_delay = 0.5 * final_delay + 0.5 * human_delay
-    #                 logger.info(f"Human disagrees with {sensor_id} timing (diff: {human_delay:.2f}s) - blending: {original_delay:.2f}s → {final_delay:.2f}s")
-
-    #         self.calibrated_delays[sensor_id] = final_delay
-
-    #     # === PRESERVE BASELINE DELAYS ===
-    #     # Ensure all baseline sensors are included in final calibrated delays
-    #     for sensor_id in self.baseline_delays:
-    #         if sensor_id not in self.calibrated_delays:
-    #             baseline_delay = self.baseline_delays[sensor_id]
-    #             self.calibrated_delays[sensor_id] = baseline_delay
-    #             print(f"  📊 {sensor_id}: Using baseline delay {baseline_delay:.2f}s (no onsite events)")
-    #             logger.info(f"Using baseline delay for {sensor_id}: {baseline_delay:.2f}s (no onsite events)")
-
-    #     # Print summary
-    #     print(f"\n📋 Onsite Delay Summary:")
-    #     for sensor_id in self.baseline_delays.keys():
-    #         baseline = self.baseline_delays.get(sensor_id, 0.0)
-    #         onsite = self.onsite_delays.get(sensor_id, 0.0)
-    #         final = self.calibrated_delays.get(sensor_id, baseline)
-    #         print(f"  {sensor_id}: Lab={baseline:.2f}s, Onsite={onsite:.2f}s, Final={final:.2f}s")
-
-    #     return delays
-  
     def _estimate_delay(self, signal_a, signal_b, max_lag=300):
         """Memory-safe cross-correlation delay estimator (for single-sensor)."""
         a = signal_a - np.mean(signal_a)

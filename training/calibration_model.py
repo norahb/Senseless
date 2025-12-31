@@ -86,22 +86,6 @@ def plot_reliability_and_coverage(raw_conf, calibrated_conf, correct, title, tar
     plt.subplot(1,2,2)
 
     thresholds = np.linspace(0,1,50)
-    # coverages, accuracies = [], []
-    # optimal_thresh = None
-
-    # for t in thresholds:
-    #     mask = calibrated_conf >= t
-    #     if mask.sum() > 0:
-    #         cov = mask.mean()*100
-    #         acc = correct[mask].mean()*100
-            
-    #         coverages.append(cov)
-    #         accuracies.append(acc)
-    #         if optimal_thresh is None and acc >= target_acc:
-    #             optimal_thresh = t
-    #     else:
-    #         coverages.append(0)
-    #         accuracies.append(np.nan)
 
     optimal_thresh = None
     best_score = -1

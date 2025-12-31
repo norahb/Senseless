@@ -300,9 +300,6 @@ def run(config):
     matched_total = match_summary.get("Normal", 0) + match_summary.get("Anomaly", 0)
     missing_total = match_summary.get("Missing", 0) + match_summary.get("Error", 0)
 
-    # print(f"📊 Vision fallback summary — Matched: {matched_total}, Missing/Error: {missing_total}")
-    # print(f"✅ Vision fallback predictions updated in log: {config.decision_log_path}")
-
     total_time = time.time() - start_time
     avg_inference_time = np.mean(inference_times) if inference_times else 0
     

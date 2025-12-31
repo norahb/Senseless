@@ -499,31 +499,6 @@ def generate_full_labels_gmm(gmm_model, pca, scaler, all_features, all_names, ma
 
     return labels, confidence, mapping
 
-# def save_final_results(all_names, labels, confidence, mapping, config, method_used):
-#     """Save final results to CSV with required schema"""
-#     mapped_labels = [mapping.get(c, "Normal") for c in labels]
-    
-#     df_out = pd.DataFrame({
-#         "Image_Name": all_names,
-#         "Cluster": labels,
-#         "Label_ssl": mapped_labels,
-#         "Confidence_Score": confidence
-#     })
-    
-#     output_dir = os.path.join("output", config.name)
-#     os.makedirs(output_dir, exist_ok=True)
-#     output_file = os.path.join(output_dir, f"{config.name}_ssl_images_labels.csv")
-#     df_out.to_csv(output_file, index=False)
-    
-#     print(f"\nFINAL RESULTS SAVED:")
-#     print(f"  Method used: {method_used.upper()}")
-#     print(f"  Output file: {output_file}")
-#     print(f"  Total images: {len(df_out)}")
-#     print(f"  Confidence range: [{confidence.min():.3f}, {confidence.max():.3f}]")
-#     print(f"  Confidence std: {confidence.std():.3f}")
-    
-#     # DEBUG: Check if mapped_labels match ground truth suspiciously well
-#     print(f"DEBUG: Mapped label distribution: {pd.Series(mapped_labels).value_counts()}")
     
 def run_clustering_comparison(train_features, train_labels, test_features, test_labels,
                               test_names, all_features, all_names, config, gt_df):

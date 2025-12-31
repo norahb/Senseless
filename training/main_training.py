@@ -92,7 +92,6 @@ def main(use_case_name):
 
     # === CONFIG FLAGS ===
     config.train_adaptive_autoencoder = False
-    # config.calculate_delays = False
     config.dynamic_delay = False
     config.detect_anomalies = False
     config.align_images = False
@@ -100,7 +99,7 @@ def main(use_case_name):
     config.refine_labels = True
     config.enable_image_classification_split = False
     config.train_image_classifier = False
-    config.run_image_inference = False
+    # config.run_image_inference = False
 
     # === SUBSYSTEM STEPS ===
     steps = [

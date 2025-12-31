@@ -20,11 +20,7 @@ def run(config):
 
     print(f"Loaded {len(image_df)} images and {len(sensor_df)} sensor records")
 
-    # # Simple alignment windows since backward labeling created proper periods
-    # primary_tolerance_sec = 2  # ±2 seconds for exact matches
-    # fallback_tolerance_sec = 10  # ±10 seconds for timing jitter
-
-        # Simple alignment windows since backward labeling created proper periods
+    # Simple alignment windows since backward labeling created proper periods
     primary_tolerance_sec = 2  # ±2 seconds for exact matches
 
     # Load calibrated delays
