@@ -83,7 +83,7 @@ class UseCaseConfig:
     memory_buffer_size: int = 2000
 
 class ConfigManager:
-    base_path = Path(r"C:\Users\c21034189\OneDrive - Cardiff University\PhD files\Paper 05\Codes\anomaly_pipeline\training\data")
+    base_path = Path(r".\training\data")
 
     # base_path = folder where main_training.py (and your data) lives
     # base_path = Path(__file__).resolve().parent.parent   # goes up to project_root
@@ -91,7 +91,7 @@ class ConfigManager:
     configs = {
         "appliance": UseCaseConfig(
             name="appliance",
-            sensor_data_path=base_path / "sensor_data" / "appliance" / "Appliance_June_2025_training_split.csv", #"Appliance_TH_1sec.csv", #, #"Appliance_1month.csv",
+            sensor_data_path=base_path / "sensor_data" / "appliance" / "Appliance_June_2025_training_split.csv", 
             image_data_path=base_path / "sensor_data" / "appliance" / "Appliance_images_June2025.csv",
             image_folder_path=base_path / "images" / "appliance" / "image_full",
             image_ssl_folder_path=base_path / "images" / "appliance" / "image_training_ssl_splitted_noclasses",
@@ -116,16 +116,16 @@ class ConfigManager:
             incremental_training = False,
             incremental_chunk_days = 5,     # from 3 → 5 days
             incremental_overlap_hours = 12, # from 6 → 12h,
-            memory_buffer_size = 2500,  # instead of implicit 200 per cycle
+            memory_buffer_size = 2500,  
             sensor_ranges={
-                'Temperature': (12, 70),    # Realistic indoor temperature
-                'Humidity': (12, 90),       # Typical indoor humidity
-                'CO2': (400, 1000)          # Typical indoor CO2 range
+                'Temperature': (12, 70),    
+                'Humidity': (12, 90),       
+                'CO2': (400, 1000)          
             }
         ),
         "co2": UseCaseConfig(
             name="co2",
-            sensor_data_path=base_path / "sensor_data" / "co2" / "CO2_Data_June2025_training_split.csv", #"CO2_1sec.csv", # #"CO2_1month.csv",
+            sensor_data_path=base_path / "sensor_data" / "co2" / "CO2_Data_June2025_training_split.csv", 
             image_data_path=base_path / "sensor_data" / "co2" / "CO2_images_June2025.csv",
             image_folder_path=base_path / "images" / "co2" / "image_full",
             image_ssl_folder_path=base_path / "images" / "co2" / "image_training_ssl_splitted_noclasses",
@@ -145,12 +145,12 @@ class ConfigManager:
             enable_range_validation=True,
             enable_statistical_cleaning=True,
             statistical_outlier_method='mad',
-            statistical_outlier_threshold=3,  # Slightly more lenient for CO2
+            statistical_outlier_threshold=3,  
             # Incremental training config for CO2
             incremental_training = True,
             incremental_chunk_days = 5,     # from 3 → 5 days
             incremental_overlap_hours = 12, # from 6 → 12h,
-            memory_buffer_size = 2500,  # instead of implicit 200 per cycle
+            memory_buffer_size = 2500,  
             sensor_ranges={
                 'CO2': (300, 3000)  
             }
@@ -158,7 +158,7 @@ class ConfigManager:
 
         "door": UseCaseConfig(
             name="door",
-            sensor_data_path=base_path  / "sensor_data" / "Door" / "Door_Data_June2025_training_split.csv", #/ "Door_Data_June2025.csv",
+            sensor_data_path=base_path  / "sensor_data" / "Door" / "Door_Data_June2025_training_split.csv", 
             image_data_path=base_path / "sensor_data" / "door" / "Door_images_June2025.csv",
             image_folder_path=base_path / "images" / "door" / "image_full",
             image_ssl_folder_path=base_path / "images" / "door" / "image_training_ssl_splitted_noclasses",
@@ -185,15 +185,15 @@ class ConfigManager:
             incremental_overlap_hours = 12, # from 6 → 12h,
             memory_buffer_size = 3000,
             sensor_ranges={
-                'Temperature': (10, 45),    # Realistic indoor temperature
-                'Humidity': (10, 90),       # Typical indoor humidity  
-                'Pressure': (99000, 102000) # Local atmospheric pressure range
+                'Temperature': (10, 45),    
+                'Humidity': (10, 90),       
+                'Pressure': (99000, 102000) 
             }
         ),
         
         "abnormal_object": UseCaseConfig(
             name="abnormal_object",
-            sensor_data_path=base_path / "sensor_data" / "abnormal_object" / "Abnormalobj_June_2025_training_split.csv",#"Abnormalobj_ultrasonic.csv", #, #"Abnormalobj_ultrasonic.csv",
+            sensor_data_path=base_path / "sensor_data" / "abnormal_object" / "Abnormalobj_June_2025_training_split.csv",
             image_data_path=base_path / "sensor_data" / "abnormal_object" / "Abnormal_object_images_June2025.csv",
             image_folder_path=base_path / "images" / "abnormal_object" / "image_full",
             image_ssl_folder_path=base_path / "images" / "abnormal_object" / "image_training_ssl_splitted_noclasses",
@@ -213,7 +213,7 @@ class ConfigManager:
             enable_range_validation=True,
             enable_statistical_cleaning=False,
             statistical_outlier_method='iqr',
-            statistical_outlier_threshold=5.0,  # More lenient for distance sensors
+            statistical_outlier_threshold=5.0,  
             sensor_ranges={
                 'S1_distance': (2, 315),    # Typical ultrasonic sensor range (cm)
                 'S2_distance': (2, 315),    # Typical ultrasonic sensor range (cm)
