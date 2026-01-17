@@ -32,7 +32,7 @@ def main(use_case_name):
     config.enable_auto_retraining = False
 
 
-    # 1. Sensor inference (existing)
+    # 1. Sensor inference 
     if config.enable_sensor_inference:
         print("🔍 Running sensor model inference...")
         sensor_df, sensor_logits = run_sensor_model(config)
@@ -40,15 +40,15 @@ def main(use_case_name):
         sensor_df = pd.read_csv(config.decision_log_path)
         sensor_logits = None
     
-    # 2. Confidence estimation (existing)
+    # 2. Confidence estimation 
     if config.enable_confidence_estimation:
         sensor_df = estimate_confidence(config, sensor_logits, sensor_df)
 
-    # 3. Vision fallback (existing)
+    # 3. Vision fallback 
     if config.enable_vision_fallback:
         vision_fallback(config)
     
-    # 4. Drift detection + 5. Automatic retraining (enhanced)
+    # 4. Drift detection + 5. Automatic retraining 
     if config.enable_drift_detection:
         if config.update_baseline_before_drift:
             print("\n🔄 Updating baseline before drift detection...")
@@ -57,7 +57,7 @@ def main(use_case_name):
         print("🔍 Running drift detection...")
         drift_results = detect_drift(config)
         
-        # NEW: Automatic retraining
+        # Automatic retraining
         if drift_results['should_retrain'] and config.enable_auto_retraining:
             print("\n🔄 Drift detected - triggering automatic retraining...")
             

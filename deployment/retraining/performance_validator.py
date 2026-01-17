@@ -165,5 +165,5 @@ class PerformanceValidator:
                 
         except Exception as e:
             print(f"Prediction failed: {e}")
-            # Fallback - random predictions
-            return np.random.choice([0, 1], size=len(X_val), p=[0.95, 0.05])
+            # Fallback 
+            # return np.random.choice([0, 1], size=len(X_val), p=[0.95, 0.05])

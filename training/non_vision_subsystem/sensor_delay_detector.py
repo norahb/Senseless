@@ -59,7 +59,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class SensorDelayDetector:
-    # def __init__(self, config_path: str = None, delay_file_path: str = 'baseline_delays.json', debug: bool = False):
     def __init__(
         self,
         config_path: str = None,
@@ -143,7 +142,6 @@ class SensorDelayDetector:
         """
         anomalies = defaultdict(list)
 
-        # print("\n[DEBUG] detect_anomalies using HOME-OPTIMIZED detector")
         print(f"[DEBUG] Sensitivity: {sensitivity}")
 
         # === Prepare aligned input ===
@@ -168,10 +166,8 @@ class SensorDelayDetector:
         for sid in sensor_ids:
             t = model.sensor_thresholds.get(sid, None)
             print(f"   - {sid}: {t}")
-        # print(f"[DEBUG] Drift info: {drift_info}")
 
         print(f"[DEBUG] Detection finished | Total anomalies: {np.sum(anomaly_flags)} / {len(anomaly_flags)}")
-        # print(f"[DEBUG] Drift info: {drift_info}")
         
         # === Get per-sensor reconstruction errors (for delay + confidence) ===
         # Here we bypass the consensus logic and use ONLY the autoencoder’s reconstruction:
@@ -313,7 +309,6 @@ class SensorDelayDetector:
             # Use the min of (0.8*threshold) and a robust baseline band
             start_threshold = min(0.8 * float(threshold), baseline + 3.0 * robust_sigma)
 
-            # Tiny smoothing to reduce jitter (window=3, causal)
             def smooth3(arr, i):
                 a = max(0, i - 2)
                 b = i + 1
@@ -428,10 +423,6 @@ class SensorDelayDetector:
                 if self.config["use_reference_sensor"] and ref_delay and sensor_id != ref_sensor_id:
                     final_delay = self.apply_reference_strategy(final_delay, ref_delay, ref_strategy)
 
-                # if sensor_id in self.human_adjusted_delays:
-                #     human_delay = self.human_adjusted_delays[sensor_id]
-                #     if abs(human_delay) >= 0.5:
-                #         final_delay = 0.5 * final_delay + 0.5 * human_delay
                 if sensor_id in self.human_adjusted_delays:
                     human_delay = self.human_adjusted_delays[sensor_id]
                     if abs(human_delay) >= 0.5:

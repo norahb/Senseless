@@ -30,8 +30,7 @@ class DeploymentConfig:
         self.enable_vision_fallback = True
         self.enable_human_review = False
 
-        # === Model Paths (absolute paths to avoid redundancy) ===
-        # Always load models from deployment folder
+        # === Model Paths ===
         self.sensor_model_path = os.path.abspath(os.path.join(deployment_dir, "models", use_case_name))
         vision_filenames = {
             "door": "door_mobilenetv2.pth",
@@ -71,12 +70,11 @@ class DeploymentConfig:
         self.adaptation_frequency = "weekly"
 
         # === Retraining ===
-        # Point to ACTUAL training data
         self.original_training_data_path = self.use_case_config.training_csv_path
 
         # Temporal windows
         self.recent_window_days = 14
-        self.min_samples_for_retraining = 200  # More realistic
+        self.min_samples_for_retraining = 200  
 
         # Sampling ratios
         self.recent_data_ratio = 0.5

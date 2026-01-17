@@ -11,7 +11,7 @@ from sklearn.cluster import KMeans
 
 class ReplayBuffer:
     """
-    Simple replay buffer to maintain diverse historical data for stable retraining.
+    Replay buffer to maintain diverse historical data for stable retraining.
     Prevents catastrophic forgetting by keeping representative samples from different periods.
     """
     
@@ -24,8 +24,8 @@ class ReplayBuffer:
         self.samples = []  # List of {data, timestamp, source, label_type}
         
         # Diversity settings
-        self.max_normal_ratio = 0.6  # Max 70% normal samples
-        self.max_anomaly_ratio = 0.3  # Max 20% sensor anomalies  
+        self.max_normal_ratio = 0.6  # Max 60% normal samples
+        self.max_anomaly_ratio = 0.3  # Max 30% sensor anomalies  
         self.max_vision_ratio = 0.1   # Max 10% vision-labeled
         
         # Load existing buffer

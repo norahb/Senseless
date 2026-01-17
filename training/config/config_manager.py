@@ -21,6 +21,7 @@ class UseCaseConfig:
     sensor_cols: List[str] = field(default_factory=list)
     sensor_metadata: Dict[str, str] = field(default_factory=dict)
     is_single_sensor: bool = False  # True for single-sensor cases like CO2
+    is_thermal_image: bool = False  # True for thermal images, False for RGB
 
     # Column names in the CSV
     date_col: str = "Date"
@@ -46,11 +47,13 @@ class UseCaseConfig:
     enable_image_classification_split: bool = True
     train_image_classifier: bool = False
     finetune_image_model: bool = False
+    finetune_from_block: int = 13
     run_image_inference: bool = False
 
     # Training parameters
-    image_classifier_epochs: int = 10
+    image_classifier_epochs: int = 15
     early_stopping_patience: int = 3
+    train_sample_fraction: float = 1
     threshold_percentile: int = 75
     threshold_factor: float = 1.2
     max_detection_window: int = 120
@@ -83,10 +86,7 @@ class UseCaseConfig:
     memory_buffer_size: int = 2000
 
 class ConfigManager:
-    base_path = Path(r".\training\data")
-
-    # base_path = folder where main_training.py (and your data) lives
-    # base_path = Path(__file__).resolve().parent.parent   # goes up to project_root
+    base_path = Path(r".\Senseless\training\data")
 
     configs = {
         "appliance": UseCaseConfig(
@@ -120,12 +120,12 @@ class ConfigManager:
             sensor_ranges={
                 'Temperature': (12, 70),    
                 'Humidity': (12, 90),       
-                'CO2': (400, 1000)          
+                'CO2': (400, 1000)        
             }
         ),
         "co2": UseCaseConfig(
             name="co2",
-            sensor_data_path=base_path / "sensor_data" / "co2" / "CO2_Data_June2025_training_split.csv", 
+            sensor_data_path=base_path / "sensor_data" / "co2" / "CO2_Data_June2025_training_split.csv",
             image_data_path=base_path / "sensor_data" / "co2" / "CO2_images_June2025.csv",
             image_folder_path=base_path / "images" / "co2" / "image_full",
             image_ssl_folder_path=base_path / "images" / "co2" / "image_training_ssl_splitted_noclasses",
@@ -148,8 +148,8 @@ class ConfigManager:
             statistical_outlier_threshold=3,  
             # Incremental training config for CO2
             incremental_training = True,
-            incremental_chunk_days = 5,     # from 3 → 5 days
-            incremental_overlap_hours = 12, # from 6 → 12h,
+            incremental_chunk_days = 5,    
+            incremental_overlap_hours = 12,
             memory_buffer_size = 2500,  
             sensor_ranges={
                 'CO2': (300, 3000)  
@@ -172,7 +172,7 @@ class ConfigManager:
             is_single_sensor=False,
             threshold_percentile = 65,
             threshold_factor = 0.80,
-            refinement_confidence_threshold = 0.78,  
+            refinement_confidence_threshold = 0.7,  
             # Cleaning config for door environment
             enable_training_data_cleaning=True,
             enable_range_validation=True,
@@ -182,7 +182,7 @@ class ConfigManager:
              # Incremental training config
             incremental_training = False,
             incremental_chunk_days = 4,     
-            incremental_overlap_hours = 12, # from 6 → 12h,
+            incremental_overlap_hours = 12, 
             memory_buffer_size = 3000,
             sensor_ranges={
                 'Temperature': (10, 45),    
@@ -207,13 +207,13 @@ class ConfigManager:
             is_single_sensor=False,
             threshold_percentile = 60,
             threshold_factor = 0.8,
-            refinement_confidence_threshold = 0.73,
+            refinement_confidence_threshold = 0.7,
             # Cleaning config for abnormal object environment
             enable_training_data_cleaning=True,
             enable_range_validation=True,
             enable_statistical_cleaning=False,
             statistical_outlier_method='iqr',
-            statistical_outlier_threshold=5.0,  
+            statistical_outlier_threshold=5.0, 
             sensor_ranges={
                 'S1_distance': (2, 315),    # Typical ultrasonic sensor range (cm)
                 'S2_distance': (2, 315),    # Typical ultrasonic sensor range (cm)

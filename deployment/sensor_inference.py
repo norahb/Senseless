@@ -10,7 +10,6 @@ from pathlib import Path
 import json
 from .rule_based_detector import run_rule_based_detector
 
-# Add the training root directory so that 'non_vision_subsystem' is importable
 training_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'training'))
 if training_path not in sys.path:
     sys.path.insert(0, training_path)

@@ -285,7 +285,7 @@ class RealtimeSensorInference:
             X = np.array([[sensor_data[col] for col in self.sensor_cols]])
             X_scaled = self.model.scaler.transform(X)
             
-            # Reconstruct (sklearn MLPRegressor.predict has no verbose arg)
+            # Reconstruct 
             X_reconstructed = self.model.autoencoder.predict(X_scaled)
             
             # Calculate reconstruction error

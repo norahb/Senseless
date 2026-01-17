@@ -1,7 +1,6 @@
 
-#     return decision_df
+#    return decision_df
 
-# 1. First, let's add debug logging to understand the data flow
 import os
 import pandas as pd
 import numpy as np
@@ -16,11 +15,11 @@ import time
 
 
 sys.path.append(
-    r"C:\Users\c21034189\OneDrive - Cardiff University\PhD files\Paper 05\Codes\anomaly_pipeline\training\models\co2\effcc_distilled_main"
+    r"..\training\models\co2\effcc_distilled_main"
 )
 from timmML2.models.factory import create_model
 
-# === FIXED: Shared image preprocessing constants ===
+# Shared image preprocessing constants ===
 corp_size = 256
 MEAN_STD = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 img_transform = transforms.Compose([
@@ -43,8 +42,7 @@ def run(config):
     fallback_df = decision_df[
         (decision_df["Low_Confidence"] == True) | (decision_df["Sensor_Status"] == "Sensor_Error")
     ].copy()
-    # fallback_df.reset_index(drop=True, inplace=True)  # 🔥 Ensure clean fallback_df index
-    # assert not fallback_df.index.duplicated().any(), "❌ Duplicate index in fallback_df!"
+
 
 
     print(f"🔍 DEBUG: Fallback cases breakdown:")
@@ -68,7 +66,7 @@ def run(config):
     after_filter = len(image_df)
     print(f"🔧 FIX: Filtered image dataset: {before_filter} -> {after_filter} (removed {before_filter - after_filter} non-image entries)")
     
-    # Ensure we're using the correct path (no 'daata' typos)
+    # Ensure we're using the correct path
     corrected_path = config.image_folder_path.replace('daata', 'data').replace('datta', 'data')
     if corrected_path != config.image_folder_path:
         print(f"🔧 FIX: Corrected path typo: {config.image_folder_path} -> {corrected_path}")
@@ -266,7 +264,7 @@ def run(config):
                 'Vision_Prediction': 'Sensor_Status'
             })
 
-            # ✅ Force proper new index — this is bulletproof
+            # ✅ Force proper new index
             vision_anomalies.reset_index(drop=True, inplace=True)
 
             # ✅ Double-check

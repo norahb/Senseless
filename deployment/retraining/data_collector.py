@@ -11,7 +11,7 @@ from .replay_buffer import ReplayBuffer
 
 class DataCollector:
     """
-    Fixed data collector with dynamic sampling and proper label harmonization.
+     data collector with dynamic sampling and proper label harmonization.
     """
     
     def __init__(self, config):
@@ -24,12 +24,7 @@ class DataCollector:
         """Calculate total target sample size based on data availability."""
         total_available = sum(available_data_sizes.values())
         
-        # More appropriate scaling for retraining:
-        # - Use 1-5% of available data, with reasonable bounds
-        # - Minimum 2000 for effective retraining
-        # - Maximum 20000 to avoid computational overhead
-        
-        percentage = 0.05  # 2% of available data
+        percentage = 0.2  # 2% of available data
         dynamic_size = int(total_available * percentage)
         dynamic_size = max(dynamic_size, self.min_samples)  
 

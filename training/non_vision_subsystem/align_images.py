@@ -20,7 +20,6 @@ def run(config):
 
     print(f"Loaded {len(image_df)} images and {len(sensor_df)} sensor records")
 
-    # Simple alignment windows since backward labeling created proper periods
     primary_tolerance_sec = 2  # ±2 seconds for exact matches
 
     # Load calibrated delays
@@ -34,7 +33,6 @@ def run(config):
         delays = delay_data.get("final_calibrated_delays_with_reference_sensor", {})
         if delays:
             max_delay = max(delays.values())
-            # If max delay > 2, use it; otherwise, fallback = 5
             fallback_tolerance_sec = max_delay if max_delay > 2 else 5
         else:
             fallback_tolerance_sec = 5
@@ -162,7 +160,7 @@ def run(config):
 
     # Save results
     output_dir = f"output/{config.name}"
-    # os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
     
     output_file = f"{output_dir}/{config.name}_sensors_images_labels.csv"
     aligned_df.to_csv(output_file, index=False)

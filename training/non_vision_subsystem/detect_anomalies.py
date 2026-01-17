@@ -23,7 +23,7 @@ def calibrate_error_distributions(detector, X_data, sensor_names, method="gaussi
     X_scaled = detector.scaler.transform(X_data)
     reconstructions = detector.autoencoder.predict(X_scaled)
 
-    # --- FIX: Ensure 2D shape for single-sensor case ---
+    # Ensure 2D shape for single-sensor case ---
     if X_scaled.ndim == 1:
         X_scaled = X_scaled.reshape(-1, 1)
     if reconstructions.ndim == 1:
@@ -40,7 +40,6 @@ def calibrate_error_distributions(detector, X_data, sensor_names, method="gaussi
             error_distributions[sensor] = {"type": "gaussian", "mean": float(mu), "std": float(sigma)}
 
         elif method == "kde":
-            # Save precomputed grid since KDE object itself is not JSON serializable
             kde = gaussian_kde(sensor_errors)
             xs = np.linspace(min(sensor_errors), max(sensor_errors), 200)
             cdf_vals = [kde.integrate_box_1d(-np.inf, e) for e in xs]
@@ -87,7 +86,7 @@ def select_detection_strategy(config):
     except Exception:
         return "ensemble", "medium", 0.70
     
-    # === NEW: Check method_selection first ===
+    # Check method_selection first ===
     method_selection = prod_config.get("method_selection", None)
     if method_selection and method_selection != "ensemble":
         # Single method was chosen at training time (e.g., autoencoder only)
@@ -166,7 +165,6 @@ def calculate_adaptive_confidence_scores(detector, X_data, sensor_names):
 
             elif dist_info["type"] == "kde":
                 xs, cdf_vals = np.array(dist_info["xs"]), np.array(dist_info["cdf_vals"])
-                # Interpolate CDF values for observed errors
                 confidence_scores = np.interp(sensor_errors, xs, cdf_vals)
                 confidence_scores = np.clip(confidence_scores, 0.01, 0.99)
 
@@ -580,7 +578,6 @@ def run(config):
                 sensor_confidences[sensor] = np.clip(base_conf, 0.1, 0.9)
             overall_confidence = np.mean([sensor_confidences[s] for s in config.sensor_cols], axis=0)
         
-        # Create dummy ensemble_results for period detection
         ensemble_results = {
             'consensus_stats': {'full_agreement': len(predictions), 'partial_agreement': 0, 'no_agreement': 0}
         }

@@ -97,7 +97,7 @@ class DriftDetector:
             # Standard deviation change
             std_change = abs(current_std - ref_stats['std']) / (ref_stats['std'] + 1e-8)
             
-            # Simple outlier rate (values outside 2 standard deviations of reference)
+            # outlier rate (values outside 2 standard deviations of reference)
             ref_lower = ref_stats['mean'] - 2 * ref_stats['std']
             ref_upper = ref_stats['mean'] + 2 * ref_stats['std']
             outlier_rate = ((recent_values < ref_lower) | (recent_values > ref_upper)).mean()
@@ -202,7 +202,7 @@ class DriftDetector:
         drift_rate = recent_entries['overall_drift_detected'].mean()
         
         # Trigger retraining if drift detected frequently
-        return drift_rate > 0.1  # 30% of recent checks show drift
+        return drift_rate > 0.3  # 30% of recent checks show drift
 
 
 def run(config, sensor_model=None, recent_sensor_data=None):

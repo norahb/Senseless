@@ -112,8 +112,8 @@ def statistical_outlier_cleaning(data, sensor_names, z_threshold=5.0, method='ma
     clean_data = data.copy()
     outlier_mask = np.zeros(data.shape, dtype=bool)
     total_outliers = 0
-    # print("the z_threshold is: ", z_threshold)
-    # print(f"📊 Starting statistical outlier cleaning using {method.upper()} method...")
+    print("the z_threshold is: ", z_threshold)
+    print(f"📊 Starting statistical outlier cleaning using {method.upper()} method...")
 
     for i, sensor in enumerate(sensor_names):
         sensor_data = data[:, i]
@@ -186,7 +186,7 @@ def comprehensive_training_cleaning(data, sensor_names, sensor_ranges=None,
         Report of cleaning operations
     """
     print(f"\n🧹 Data cleaning...")
-    # print(f"📊 Input data shape: {data.shape}")
+    print(f"📊 Input data shape: {data.shape}")
     
     original_data = data.copy()
     current_data = data.copy()
@@ -230,11 +230,11 @@ def comprehensive_training_cleaning(data, sensor_names, sensor_ranges=None,
     cleaned_variance = np.mean(np.var(current_data, axis=0))
     cleaning_report['data_quality_improvement'] = (cleaned_variance / original_variance) if original_variance > 0 else 1.0
     
-    # print(f"✅ Data cleaning completed!")
-    # print(f"📊 Samples: {cleaning_report['original_samples']} → {cleaning_report['final_samples']}")
-    # print(f"⚡ Sensor errors fixed: {cleaning_report['sensor_errors_detected']}")
-    # print(f"📈 Statistical outliers cleaned: {cleaning_report['statistical_outliers_detected']}")
-    # print(f"🎯 Data quality ratio: {cleaning_report['data_quality_improvement']:.3f}")
+    print(f"✅ Data cleaning completed!")
+    print(f"📊 Samples: {cleaning_report['original_samples']} → {cleaning_report['final_samples']}")
+    print(f"⚡ Sensor errors fixed: {cleaning_report['sensor_errors_detected']}")
+    print(f"📈 Statistical outliers cleaned: {cleaning_report['statistical_outliers_detected']}")
+    print(f"🎯 Data quality ratio: {cleaning_report['data_quality_improvement']:.3f}")
     
     return current_data, cleaning_report
 
@@ -284,39 +284,6 @@ def get_default_sensor_ranges(sensor_names):
             print(f"📏 Default range for {sensor}: {default_ranges[sensor]}")
     
     return ranges
-
-# # Usage example for home care
-# def home_care_monitoring_example():
-#     """
-#     Example of how to use the optimized home care monitoring.
-#     """
-#     # Initialize for home environment
-#     detector = AdaptiveUnsupervisedAutoencoder(
-#         sensor_names=['Temperature', 'Humidity', 'CO2', 'Motion'],
-#         case_name='elderly_care_home'
-#     )
-    
-#     # Train on normal home data
-#     # detector.learn_environment(training_data)
-    
-#     # Monitor new readings
-#     # anomalies, insights, drift = detector.predict_anomalies_home_optimized(
-#     #     new_readings, 
-#     #     sensitivity='medium'  # Good for most homes
-#     # )
-    
-#     # Example output interpretation
-#     example_insights = {
-#         'anomaly_explanations': [{
-#             'type': 'climate_issue',
-#             'message': 'Temperature and humidity levels are unusual',
-#             'recommendation': 'Check HVAC system, windows, or room ventilation'
-#         }],
-#         'severity_levels': ['medium'],
-#         'recommendations': ['Check HVAC system, windows, or room ventilation']
-#     }
-    
-#     return example_insights
     
 class AdaptiveUnsupervisedAutoencoder:
     def __init__(self, 
@@ -359,7 +326,7 @@ class AdaptiveUnsupervisedAutoencoder:
 
         # Dynamic parameters that adapt over time
         self.current_contamination = 0.1  # Will be estimated
-        self.contamination = 0.05  # 🔧 ADD THIS LINE for backward compatibility
+        self.contamination = 0.05 
         self.adaptive_threshold_multiplier = 1.0
         self.confidence_level = 0.95  # For threshold calculation
         
@@ -560,9 +527,6 @@ class AdaptiveUnsupervisedAutoencoder:
             )
             print(f"Calculated global threshold ({self.threshold_percentile}th percentile * {self.threshold_factor}): {self.global_threshold:.6f}")
 
-        # Per-sensor threshold calculation
-        # sensor_errors = (X_scaled - self.autoencoder.predict(X_scaled)) ** 2
-
         recon = self.autoencoder.predict(X_scaled)
         if X_scaled.shape[1] == 1 and recon.ndim == 1:
             recon = recon.reshape(-1, 1)
@@ -576,7 +540,7 @@ class AdaptiveUnsupervisedAutoencoder:
                 # Low variance sensor
                 threshold = max(
                     np.mean(sensor_reconstruction_errors) + 3*np.std(sensor_reconstruction_errors),
-                    np.percentile(sensor_reconstruction_errors, self.threshold_percentile) * self.threshold_factor,  # ✅ Use config
+                    np.percentile(sensor_reconstruction_errors, self.threshold_percentile) * self.threshold_factor, 
                     1e-5  # Minimum sensor threshold
                 )
                 print(f"🔧 Applied fallback threshold for {sensor}: {threshold:.6f}")
@@ -618,7 +582,7 @@ class AdaptiveUnsupervisedAutoencoder:
         """
         print("🎯 Calibrating thresholds on validation data...")
         
-        # Memory-efficient stratified sampling
+        # Memory-efficient sampling
         if len(X_val) > 10000:
             try:
                 from sklearn.model_selection import train_test_split
@@ -626,7 +590,7 @@ class AdaptiveUnsupervisedAutoencoder:
                     X_val, y_val, test_size=min(0.3, 5000/len(X_val)), 
                     stratify=y_val, random_state=42
                 )
-                print(f"🔧 Stratified sampling: {len(X_val_sample)} samples")
+                print(f"🔧 Sampling: {len(X_val_sample)} samples")
             except:
                 # Fallback to random if stratified fails
                 sample_size = min(5000, len(X_val))
@@ -762,29 +726,8 @@ class AdaptiveUnsupervisedAutoencoder:
             except Exception as e:
                 print(f"⚠️ EllipticEnvelope calibration failed: {e}")
                 self.outlier_detector = None
-
-    # def adjust_method_thresholds(self):
-    #     """
-    #     DEPRECATED: Use calibrate_thresholds_on_validation() instead.
-    #     This method caused distribution mismatch by using training data.
-    #     """
-    #     print("⚠️ Warning: adjust_method_thresholds() is deprecated. Use calibrate_thresholds_on_validation() instead.")
-    #     # Keep the original logic as fallback, but warn user
-    #     X_train_scaled = self.scaler.transform(self.training_data)
-        
-    #     train_reconstructions = self.autoencoder.predict(X_train_scaled)
-    #     train_errors = np.mean((X_train_scaled - train_reconstructions) ** 2, axis=1)
-        
-    #     detection_rate = np.sum(train_errors > self.global_threshold) / len(train_errors)
-        
-    #     if detection_rate > 0.15:
-    #         self.global_threshold = np.percentile(train_errors, 98)
-    #         print(f"🔧 Reduced sensitivity: new global threshold {self.global_threshold:.6f}")
-    #     elif detection_rate < 0.02:
-    #         self.global_threshold = np.percentile(train_errors, 90)
-    #         print(f"🔧 Increased sensitivity: new global threshold {self.global_threshold:.6f}")
             
-    # Fix 4: Complete Updated learn_environment Method
+    # Complete Updated learn_environment Method
     def learn_environment(self, training_data):
         """
         Updated learn_environment with robust threshold calculation.
@@ -792,7 +735,6 @@ class AdaptiveUnsupervisedAutoencoder:
         self.training_data = training_data.copy()
         print(f"\n🎓 Learning environment from {len(training_data)} samples...")
         
-        # ADD THIS LINE:
         self.scaler = self._choose_scaler(training_data)
 
         X_scaled = self.scaler.fit_transform(training_data)
@@ -801,7 +743,7 @@ class AdaptiveUnsupervisedAutoencoder:
         # Estimate contamination smartly
         self.estimated_contamination = self.estimate_smart_contamination(X_scaled)
         
-        #     # Auto-configure architecture
+        # Auto-configure architecture
         hidden_layers, solver, max_iter = self._auto_configure_architecture()
         # print(f"🏗️  Architecture: {self.n_features} -> {' -> '.join(map(str, hidden_layers))} -> {self.n_features}")
 
@@ -883,7 +825,7 @@ class AdaptiveUnsupervisedAutoencoder:
         self.is_trained = True
         # print(f"🔄 Ready for real-time adaptation")
 
-    # Fix 5: Validation Function
+    # Validation Function
     def validate_thresholds(self, X_test_sample=None):
         """
         Validate that thresholds are reasonable.
@@ -1144,134 +1086,6 @@ class AdaptiveUnsupervisedAutoencoder:
         
         return anomaly_flags, anomaly_scores, drift_info
 
-    # def predict_anomalies_home_optimized(self, X, adapt=True, sensitivity='medium', verbose=True):
-    #     """
-    #     Optimized anomaly detection for home care environments.
-    #     Updated to handle missing outlier detector.
-    #     """
-    #     if not self.is_trained:
-    #         raise ValueError("Model not trained. Call learn_environment() first.")
-            
-    #     X_scaled = self.scaler.transform(X)
-    #     n_samples = X.shape[0]
-        
-    #     # Detect drift
-    #     drift_score, needs_adaptation = self.detect_drift(X)
-        
-    #     # Get predictions from all methods
-    #     # reconstructions = self.autoencoder.predict(X_scaled)
-    #     # reconstruction_errors = (X_scaled - reconstructions) ** 2
-
-    #     reconstructions = self.autoencoder.predict(X_scaled)
-    #     if X_scaled.shape[1] == 1 and reconstructions.ndim == 1:
-    #         reconstructions = reconstructions.reshape(-1, 1)
-    #     reconstructions = self.autoencoder.predict(X_scaled)
-    #     if X_scaled.shape[1] == 1 and reconstructions.ndim == 1:
-    #         reconstructions = reconstructions.reshape(-1, 1)
-    #     reconstruction_errors = (X_scaled - reconstructions) ** 2
-
-    #     global_errors = np.mean(reconstruction_errors, axis=1)
-        
-    #     # Isolation forest
-    #     iso_predictions = self.isolation_forest.predict(X_scaled)
-    #     iso_anomalies = (iso_predictions == -1)
-        
-    #     # Outlier detection (handle missing detector)
-    #     if self.outlier_detector is not None:
-    #         outlier_predictions = self.outlier_detector.predict(X_scaled)
-    #         outlier_anomalies = (outlier_predictions == -1)
-    #         available_methods = 3
-    #     else:
-    #         outlier_anomalies = np.zeros(n_samples, dtype=bool)
-    #         available_methods = 2
-        
-    #     # Autoencoder anomalies
-    #     autoencoder_anomalies = global_errors > self.global_threshold
-
-    #     # Use the verbose parameter that's already being passed
-    #     # if verbose:
-    #     #     print(f"   Autoencoder anomalies: {np.sum(autoencoder_anomalies)} ({np.sum(autoencoder_anomalies)/n_samples*100:.1f}%)")
-    #     #     print(f"   Global threshold: {self.global_threshold:.6f}")
-    #     #     print(f"   Isolation Forest anomalies: {np.sum(iso_anomalies)} ({np.sum(iso_anomalies)/n_samples*100:.1f}%)")
-            
-    #     #     if self.outlier_detector is not None:
-    #     #         print(f"   EllipticEnvelope anomalies: {np.sum(outlier_anomalies)} ({np.sum(outlier_anomalies)/n_samples*100:.1f}%)")
-    #     #     else:
-    #     #         print(f"   EllipticEnvelope: Not available")
-            
-    #     #     print(f"   Sensitivity config: {self._get_home_sensitivity_config_adjusted(sensitivity, available_methods)}")
-         
-    #     # Home-optimized consensus logic
-    #     anomaly_flags = np.zeros(n_samples, dtype=int)
-    #     home_insights = {
-    #         'anomaly_explanations': [],
-    #         'sensor_contributions': [],
-    #         'severity_levels': [],
-    #         'recommendations': []
-    #     }
-        
-    #     # Set sensitivity thresholds (adjusted for available methods)
-    #     sensitivity_config = self._get_home_sensitivity_config_adjusted(sensitivity, available_methods)
-        
-    #     for i in range(n_samples):
-    #         # Method predictions
-    #         autoencoder_anomaly = global_errors[i] > self.global_threshold
-    #         isolation_anomaly = iso_anomalies[i]
-    #         outlier_anomaly = outlier_anomalies[i]
-            
-    #         # Per-sensor analysis for explanations
-    #         sensor_analysis = {}
-    #         for j, sensor in enumerate(self.sensor_names):
-    #             sensor_error = reconstruction_errors[i, j]
-    #             threshold = self.sensor_thresholds[sensor]
-    #             score = sensor_error / (threshold + 1e-8)
-                
-    #             sensor_analysis[sensor] = {
-    #                 'score': float(score),
-    #                 'is_unusual': score > 1.0,
-    #                 'severity': 'high' if score > 2.0 else 'medium' if score > 1.5 else 'low'
-    #             }
-            
-    #         # Home-optimized decision logic (adjusted for available methods)
-    #         decision_result = self._make_home_care_decision_adjusted(
-    #             autoencoder_anomaly, isolation_anomaly, outlier_anomaly,
-    #             sensor_analysis, sensitivity_config, available_methods
-    #         )
-            
-    #         anomaly_flags[i] = decision_result['is_anomaly']
-            
-    #         # Generate home-friendly insights
-    #         if decision_result['is_anomaly']:
-    #             insight = self._generate_home_insight(sensor_analysis, decision_result)
-    #             home_insights['anomaly_explanations'].append(insight)
-    #             home_insights['severity_levels'].append(decision_result['severity'])
-    #             home_insights['recommendations'].append(insight['recommendation'])
-    #         else:
-    #             home_insights['anomaly_explanations'].append({'status': 'normal'})
-    #             home_insights['severity_levels'].append('none')
-    #             home_insights['recommendations'].append('Continue monitoring')
-            
-    #         home_insights['sensor_contributions'].append(sensor_analysis)
-        
-    #     # Update adaptive components
-    #     if adapt:
-    #         self._adaptive_update(X, X_scaled, global_errors, drift_score, needs_adaptation)
-        
-    #     # Update counters
-    #     self.samples_seen += n_samples
-    #     self.anomalies_detected += np.sum(anomaly_flags)
-        
-    #     # Drift information
-    #     drift_info = {
-    #         'drift_score': drift_score,
-    #         'needs_adaptation': needs_adaptation,
-    #         'samples_seen': self.samples_seen,
-    #         'anomaly_rate': np.sum(anomaly_flags) / n_samples,
-    #         'environment_status': self._assess_home_environment_status(drift_score, anomaly_flags),
-    #         'available_methods': available_methods
-    #     }
-
-    #     return anomaly_flags, home_insights, drift_info
 
     def predict_anomalies_home_optimized(self, X, adapt=True, sensitivity='medium', verbose=True):
         """
@@ -1412,14 +1226,14 @@ class AdaptiveUnsupervisedAutoencoder:
         Get sensitivity configuration adjusted for available methods.
         """
         if available_methods == 3:
-            # Original 3-method configuration
+            # 3-method configuration
             configs = {
                 'low': {'methods_required': 3, 'description': 'Conservative - all 3 methods must agree'},
                 'medium': {'methods_required': 2, 'description': 'Balanced - 2 out of 3 methods must agree'},
                 'high': {'methods_required': 1, 'description': 'Sensitive - any method can trigger'},
             }
         else:
-            # Adjusted 2-method configuration
+            # 2-method configuration
             configs = {
                 'low': {'methods_required': 2, 'description': 'Conservative - both methods must agree'},
                 'medium': {'methods_required': 2, 'description': 'Balanced - both methods must agree'},

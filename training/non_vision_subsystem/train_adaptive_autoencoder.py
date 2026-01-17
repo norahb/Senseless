@@ -68,7 +68,6 @@ class IncrementalMemoryBuffer:
     def get_memory_samples(self, target_size=None):
         """Get samples from memory buffer"""
         if not self.buffer:
-            # return np.array([]).reshape(0, -1)
             return np.array([])
         buffer_array = np.array(list(self.buffer))
         
@@ -158,12 +157,7 @@ def run_incremental_training(config):
     # Create labels
     df['Label'] = (df[config.status_col] == config.anomaly_value).astype(int)
 
-    # # Create time-based chunks (3 days with 6h overlap)
-    # chunks = create_time_based_chunks(df, chunk_days=3, overlap_hours=6)
-    # # Initialize memory buffer and detector
-    # memory_buffer = IncrementalMemoryBuffer(max_size=2000)
-
-    # ✅ new — use config values if present, fallback otherwise
+    # use config values if present, fallback otherwise
     chunk_days = getattr(config, "incremental_chunk_days", 3)
     overlap_hours = getattr(config, "incremental_overlap_hours", 6)
     buffer_size = getattr(config, "memory_buffer_size", 2000)
@@ -236,8 +230,6 @@ def run_incremental_training(config):
         else:
             # Subsequent cycles: incremental update
             print("Performing incremental update...")
-            # For simplicity, retrain on combined data
-            # In a more sophisticated approach, you could do true incremental updates
             detector.learn_environment(X_train_combined)
         
         # Calibrate thresholds on current validation data
@@ -426,7 +418,7 @@ def run(config):
 
     print(f"📊 Status distribution: {df[config.status_col].value_counts().to_dict()}")
 
-    # Create labels and stratified split (instead of chronological)
+    # Create labels and split
     df['Label'] = (df[config.status_col] == config.anomaly_value).astype(int)
 
     # First split: separate test set (15%)
@@ -439,17 +431,15 @@ def run(config):
         train_val, test_size=0.176, stratify=train_val['Label'], random_state=42  # 0.176 = 15/85
     )
 
-    print(f"📊 Stratified split: Train={len(df_train)}, Val={len(df_val)}, Test={len(df_test)}")
+    print(f"📊 Split: Train={len(df_train)}, Val={len(df_val)}, Test={len(df_test)}")
 
-    # print(f"📊 Split: Train={len(df_train)}, Val={len(df_val)}, Test={len(df_test)}")
 
     # Extract features
     features = config.sensor_cols
     # X_train = df_train[features].values
     # Filter to only normal samples for autoencoder training
-    normal_mask = df_train['Label'] == 0  # Since Label is created from status_col
+    normal_mask = df_train['Label'] == 0  
     X_train_normal = df_train[normal_mask][features].values
-    print(f"📊 Filtered training: {len(X_train_normal)} normal samples (was {len(df_train)})")
 
     # Use normal-only data for training
     X_train = X_train_normal
@@ -479,7 +469,7 @@ def run(config):
     else:
         cleaning_report = {'enabled': False}
 
-    # Val/Test data cleaning (hardware errors only - keep statistical outliers as potential real anomalies)
+    # Val/Test data cleaning (hardware errors only)
     clean_val_test_errors = getattr(config, 'clean_val_test_sensor_errors', True)
     
     if clean_val_test_errors and sensor_ranges:
@@ -535,14 +525,9 @@ def run(config):
     sensitivity_results = {}
 
 
-    # === ADD THIS BLOCK BEFORE THE SENSITIVITY LOOP ===
     if not config.quiet_mode:
         print("🔍 Method predictions on validation data:")
 
-        # Get method predictions once for debug info
-        # X_val_scaled = detector.scaler.transform(X_val)
-        # val_reconstructions = detector.autoencoder.predict(X_val_scaled)
-        # val_errors = np.mean((X_val_scaled - val_reconstructions) ** 2, axis=1)
 
         X_val_scaled = detector.scaler.transform(X_val)
         val_reconstructions = detector.autoencoder.predict(X_val_scaled)
@@ -593,7 +578,7 @@ def run(config):
         test_report_dict = classification_report(y_test, test_preds, output_dict=True, zero_division=0)
         test_report_string = classification_report(y_test, test_preds, target_names=["Normal", "Anomaly"], zero_division=0)
 
-        # Calculate metrics using VALIDATION performance (proper approach)
+        # Calculate metrics using VALIDATION performance
         val_normal_f1 = val_report.get('0', {}).get('f1-score', 0)
         val_anomaly_f1 = val_report.get('1', {}).get('f1-score', 0)
         balance_score = min(val_normal_f1, val_anomaly_f1)
@@ -605,7 +590,7 @@ def run(config):
             penalty += 0.3  # Normal class precision failure
         if val_report.get('1', {}).get('precision', 0) == 0:
             penalty += 0.1  # Anomaly class precision failure
-        # Add recall penalties too (important!)
+    
         if val_report.get('0', {}).get('recall', 0) == 0:
             penalty += 0.3  # Normal class recall failure
         if val_report.get('1', {}).get('recall', 0) == 0:
@@ -649,13 +634,7 @@ def run(config):
         }
         
         if verbose:
-            # # Detailed output with full classification reports
-            print(f"\n📊 {sensitivity.upper()} Sensitivity Results:")
-            print(f"   Validation: Acc={val_report['accuracy']:.3f}")
-            print(f"   Test: Acc={test_report_dict['accuracy']:.3f}, MacroF1={test_macro_f1:.3f}, Balance={test_balance_score:.3f}")
-            print("\n🔍 Detailed Test Classification Report:")
-            print(test_report_string)
-                # Detailed output with full classification reports
+
             val_report_string = classification_report(y_val, val_preds, target_names=["Normal", "Anomaly"], zero_division=0)
             
             print(f"\n📊 {sensitivity.upper()} Sensitivity Results:")
@@ -667,7 +646,7 @@ def run(config):
             print("\n🔍 Detailed Test Classification Report:")
             print(test_report_string)  
         else:
-            # Minimal output (your current summary line)
+            # Minimal output
             print(f"   📊 {sensitivity.upper()}: Val={val_report['accuracy']:.1%}, Test={test_report_dict['accuracy']:.1%}")
 
     # Auto-select and final evaluation
@@ -732,6 +711,5 @@ def run(config):
     
     print(f"\n💾 Model saved: {model_path}")
     print(f"⚙️ Config saved: {config_path}")
-    # print(f"✅ Pipeline completed\n")
 
     return detector, best_sensitivity, sensitivity_results

@@ -66,12 +66,12 @@ class RetrainingManager:
             print(f"Cleaning report: {training_result.get('cleaning_report', {})}")
 
             # Step 3: Validate performance (optional, can be skipped if not needed)
-            # current_model = self.model_trainer.load_current_model()
-            # validation_result = self.validator.validate_new_model(
-            #     training_result['new_model'], 
-            #     data_result['validation_data'],
-            #     current_model
-            # )
+            current_model = self.model_trainer.load_current_model()
+            validation_result = self.validator.validate_new_model(
+                training_result['new_model'], 
+                data_result['validation_data'],
+                current_model
+            )
 
             # Step 4: Deploy new model (always deploy if retraining succeeds)
             print("Deploying new model...")

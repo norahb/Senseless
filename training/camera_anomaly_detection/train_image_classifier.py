@@ -1,6 +1,4 @@
 
-# # vision_subsystem/train_image_classifier.py
-
 import os
 import json
 import joblib
@@ -8,11 +6,14 @@ import torch
 import torch.nn as nn
 from torchvision import datasets, transforms
 from torchvision.models import mobilenet_v2, MobileNet_V2_Weights
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from sklearn.metrics import classification_report
 from tqdm import tqdm
 from pathlib import Path
+from collections import Counter
 import time
+import random
+import numpy as np
 
 def normalize_class_names(class_data):
     """
@@ -55,6 +56,80 @@ def check_class_mapping_source(class_map_path):
     
     return True
 
+
+def class_distribution(dataset, class_names):
+    """Compute class counts for ImageFolder or Subset datasets."""
+    if isinstance(dataset, Subset):
+        base = dataset.dataset
+        indices = dataset.indices
+        labels = [base.samples[i][1] for i in indices]
+    elif hasattr(dataset, 'samples'):
+        labels = [s[1] for s in dataset.samples]
+    else:
+        # Fallback: iterate dataset (slower)
+        labels = [y for _, y in dataset]
+    counts = Counter(labels)
+    return {class_names[i]: counts.get(i, 0) for i in range(len(class_names))}
+
+
+def set_seed(seed=42):
+    """Set all random seeds for reproducibility."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+
+def get_rgb_transforms():
+    """Get RGB image transforms (for visible light images)."""
+    train_transform = transforms.Compose([
+        transforms.RandomResizedCrop(224, scale=(0.6, 1.0)),
+        transforms.RandomHorizontalFlip(),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+        transforms.RandomRotation(15),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    
+    val_test_transform = transforms.Compose([
+        transforms.Resize(232),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    
+    return train_transform, val_test_transform
+
+
+def get_thermal_transforms():
+    """Get thermal image transforms (for single-channel thermal/IR images)."""
+    train_transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.RandomAffine(degrees=5, translate=(0.05, 0.05)),
+        transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 0.2)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5], std=[0.2])  # Single-channel normalization
+    ])
+    
+    val_test_transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5], std=[0.2])  # Single-channel normalization
+    ])
+    
+    return train_transform, val_test_transform
+
+def set_finetune_from_block(model, start_block):
+    """Enable gradients from a given feature block onward, freeze earlier blocks."""
+    total_blocks = len(model.features)
+    start_block = max(0, min(total_blocks, start_block))
+    for idx, block in enumerate(model.features):
+        requires_grad = idx >= start_block
+        for param in block.parameters():
+            param.requires_grad = requires_grad
+
 def load_existing_model(config, device):
     """Check if a trained model exists and load it."""
     model_dir = Path(f"models/{config.name}")
@@ -86,7 +161,7 @@ def load_existing_model(config, device):
         
         # Create model architecture
         weights = MobileNet_V2_Weights.DEFAULT
-        model = mobilenet_v2(weights=None)  # Don't load pretrained weights
+        model = mobilenet_v2(weights=None) 
         num_classes = len(class_names)
         model.classifier[1] = nn.Linear(model.last_channel, num_classes)
         
@@ -146,17 +221,38 @@ def train_new_model(config, device, train_loader, val_loader, num_classes):
             param.requires_grad = False
         print("🔒 Feature extractor frozen. Only classifier will be trained.")
     else:
-        print("🔓 Fine-tuning all layers.")
+        start_block = getattr(config, 'finetune_from_block', 0)
+        set_finetune_from_block(model, start_block)
+        print(f"🔓 Fine-tuning from block {start_block} onward (earlier blocks frozen).")
+
+    # Ensure classifier is always trainable
+    for param in model.classifier.parameters():
+        param.requires_grad = True
 
     model = model.to(device)
+    
+    # === Class weight imbalance ===
+    # Use uniform weights (no class weighting)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=1e-4)
+
+    # === Reduce learning rate and add L2 regularization ===
+    # Lower LR = slower convergence = harder to overfit
+    # L2 regularization = force smaller weights = simpler model
+    optimizer = torch.optim.Adam(
+        filter(lambda p: p.requires_grad, model.parameters()),
+        lr=1e-5,  # Reduced from 1e-4
+        weight_decay=1e-3  
+    )
 
     # Training with early stopping
     best_val_loss = float('inf')
     patience = getattr(config, 'early_stopping_patience', 3)
     num_epochs = getattr(config, 'image_classifier_epochs', 10)
     wait = 0
+    
+    # === Track overfitting ===
+    train_losses = []
+    val_losses = []
 
     for epoch in range(num_epochs):
         # Training phase
@@ -174,6 +270,7 @@ def train_new_model(config, device, train_loader, val_loader, num_classes):
             running_loss += loss.item()
         
         avg_train_loss = running_loss / len(train_loader)
+        train_losses.append(avg_train_loss)
         print(f"📉 Epoch {epoch+1} Training Loss: {avg_train_loss:.4f}")
 
         # Validation phase
@@ -193,8 +290,21 @@ def train_new_model(config, device, train_loader, val_loader, num_classes):
                 val_correct += (preds == labels).sum().item()
         
         avg_val_loss = val_loss / len(val_loader)
+        val_losses.append(avg_val_loss)
         val_accuracy = 100 * val_correct / val_total
-        print(f"📋 Epoch {epoch+1} Validation Loss: {avg_val_loss:.4f}, Accuracy: {val_accuracy:.2f}%")
+        
+        # === Detect overfitting ===
+        overfit_gap = avg_val_loss - avg_train_loss
+
+        # Only flag overfitting if it's severe AND sustained
+        if overfit_gap > 0.3:  # Large gap = underfitting
+            overfit_indicator = "⚠️ UNDERFITTING"
+        elif overfit_gap < -0.2:  # Very negative = real overfitting
+            overfit_indicator = "🔥 OVERFITTING"
+        else:
+            overfit_indicator = "✅ Balanced"
+        
+        print(f"📋 Epoch {epoch+1} Val Loss: {avg_val_loss:.4f}, Acc: {val_accuracy:.2f}% | {overfit_indicator}")
 
         # Early stopping logic
         if avg_val_loss < best_val_loss:
@@ -214,6 +324,11 @@ def train_new_model(config, device, train_loader, val_loader, num_classes):
         model.load_state_dict(torch.load("temp_best_model.pth", weights_only=True))
         os.remove("temp_best_model.pth")
         print("✅ Loaded best model from training")
+    
+    # === Print final gap analysis ===
+    if train_losses and val_losses:
+        final_gap = val_losses[-1] - train_losses[-1]
+        print(f"\n📊 Final Loss Gap (Val - Train): {final_gap:.4f}")
 
     return model
 
@@ -236,43 +351,62 @@ def run(config):
     print(f"\n[TRAIN] 🖼️ Image classifier pipeline for: {config.name}")
     print("=" * 60)
 
+    # Set seed for reproducibility
+    set_seed(seed=42)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"🔧 Using device: {device}")
+    
 
-    # Define transforms
-    train_transform = transforms.Compose([
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
-        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
-        transforms.RandomRotation(15),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
-
-    val_test_transform = transforms.Compose([
-        transforms.Resize(232),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
+    # Define transforms based on image type (thermal vs RGB)
+    is_thermal = getattr(config, 'is_thermal_image', False)
+    
+    
+    if is_thermal:
+        print("🌡️  Using thermal image transforms (single-channel normalization)")
+        train_transform, val_test_transform = get_thermal_transforms()
+    else:
+        print("🖼️  Using RGB image transforms (ImageNet normalization)")
+        train_transform, val_test_transform = get_rgb_transforms()
 
     # Load datasets
     try:
         train_data = datasets.ImageFolder(config.image_training_folder_path, transform=train_transform)
         val_data = datasets.ImageFolder(config.image_validation_folder_path, transform=val_test_transform)
         test_data = datasets.ImageFolder(config.image_evaluation_folder_path, transform=val_test_transform)
-        
+
+        class_names = train_data.classes
+        orig_train_len = len(train_data)
+
+        train_fraction = getattr(config, 'train_sample_fraction', 1.0)
+        if 0 < train_fraction < 1.0:
+            subset_size = max(1, int(orig_train_len * train_fraction))
+            generator = torch.Generator().manual_seed(42)
+            subset_indices = torch.randperm(orig_train_len, generator=generator)[:subset_size]
+            train_data = Subset(train_data, subset_indices.tolist())
+            print(f"⚖️ Subsampled training data: {subset_size}/{orig_train_len} (~{train_fraction:.2f} fraction)")
+        else:
+            subset_size = orig_train_len
+
         print(f"📊 Dataset loaded successfully:")
-        print(f"   Training samples: {len(train_data)}")
+        print(f"   Training samples: {subset_size}")
         print(f"   Validation samples: {len(val_data)}")
         print(f"   Test samples: {len(test_data)}")
-        print(f"   Classes: {train_data.classes}")
+        print(f"   Classes: {class_names}")
+
+        # Class distribution checks
+        train_dist = class_distribution(train_data, class_names)
+        val_dist = class_distribution(val_data, class_names)
+        test_dist = class_distribution(test_data, class_names)
+        print(f"   Train dist: {train_dist}")
+        print(f"   Val dist:   {val_dist}")
+        print(f"   Test dist:  {test_dist}")
         
     except Exception as e:
         print(f"❌ Error loading datasets: {e}")
         return
 
-    train_loader = DataLoader(train_data, batch_size=32, shuffle=True)
+    train_loader = DataLoader(train_data, batch_size=32, shuffle=True, generator=torch.Generator().manual_seed(42))
     val_loader = DataLoader(val_data, batch_size=32, shuffle=False)
     test_loader = DataLoader(test_data, batch_size=32, shuffle=False)
 
@@ -284,12 +418,12 @@ def run(config):
         # Verify class compatibility
         print(f"🔍 Class comparison:")
         print(f"   Existing (normalized): {existing_classes}")
-        print(f"   Current dataset:       {train_data.classes}")
+        print(f"   Current dataset:       {class_names}")
         
         # Enhanced compatibility check
         classes_match = (
-            len(existing_classes) == len(train_data.classes) and
-            set(existing_classes) == set(train_data.classes)
+            len(existing_classes) == len(class_names) and
+            set(existing_classes) == set(class_names)
         )
         
         if classes_match:
@@ -319,9 +453,9 @@ def run(config):
         
         else:
             print("⚠️ Existing model classes don't match current dataset")
-            print(f"   Class count - Existing: {len(existing_classes)}, Current: {len(train_data.classes)}")
-            print(f"   Missing from existing: {set(train_data.classes) - set(existing_classes)}")
-            print(f"   Extra in existing: {set(existing_classes) - set(train_data.classes)}")
+            print(f"   Class count - Existing: {len(existing_classes)}, Current: {len(class_names)}")
+            print(f"   Missing from existing: {set(class_names) - set(existing_classes)}")
+            print(f"   Extra in existing: {set(existing_classes) - set(class_names)}")
             print("🔄 Will train new model...")
     
     else:
@@ -329,14 +463,14 @@ def run(config):
 
     # === TRAIN NEW MODEL ===
     print("\n🏋️ Starting model training...")
-    model = train_new_model(config, device, train_loader, val_loader, len(train_data.classes))
+    model = train_new_model(config, device, train_loader, val_loader, len(class_names))
     
     # === SAVE MODEL ===
-    save_model_and_classes(model, train_data.classes, config)
+    save_model_and_classes(model, class_names, config)
 
     # === FINAL EVALUATION ===
     print("\n🎯 Final evaluation on test data...")
-    test_accuracy, test_report = evaluate_model(model, test_loader, train_data.classes, device)
+    test_accuracy, test_report = evaluate_model(model, test_loader, class_names, device)
     
     print(f"\n✅ FINAL RESULTS:")
     print(f"🎯 Test Accuracy: {test_accuracy:.2f}%")
@@ -349,6 +483,6 @@ def run(config):
     return {
         'model_path': f"models/{config.name}/{config.name}_mobilenetv2.pth",
         'test_accuracy': test_accuracy,
-        'class_names': train_data.classes,
+        'class_names': class_names,
         'retrained': True
     }

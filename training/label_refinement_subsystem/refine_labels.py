@@ -153,8 +153,6 @@ def apply_dynamic_refinement(ssl_df, nonvision_df, thresholds):
     ]
 
 def load_and_prepare_data(ssl_file, nonvision_file):
-    # ssl_df = pd.read_csv(config.ssl_labels_path)
-    # nonvision_df = pd.read_csv(config.sensor_labels_path)
     ssl_df = pd.read_csv(ssl_file)
     nonvision_df = pd.read_csv(nonvision_file)
 
@@ -240,7 +238,6 @@ def interactive_human_labeling(df, config):
 
 def run(config):
     print(f"\n🔧 Calibration and label refinement for use case: {config.name}")
-
     
     # Define file paths once
     dir_path = os.path.join("output", config.name)
@@ -276,13 +273,7 @@ def run(config):
 
     print(f"📏 Using cutoffs → SSL: {ssl_cutoff}, Sensor: {sensor_cutoff}")
 
-    # # Load and calibrate data
-    # ssl_df, nonvision_df = load_and_prepare_data(config)
-    # ssl_df["Confidence_Score_ssl"] = ssl_iso.predict(ssl_df["Confidence_Score_ssl"].values)
-    # nonvision_df["Confidence_Score_nonvision"] = sensor_iso.predict(
-    #     nonvision_df["Confidence_Score_nonvision"].values
-    # )
-        # Load and calibrate data
+    # Load and calibrate data
     ssl_df, nonvision_df = load_and_prepare_data(ssl_file, nonvision_file)
     ssl_df["Confidence_Score_ssl"] = ssl_iso.predict(ssl_df["Confidence_Score_ssl"].values)
     nonvision_df["Confidence_Score_nonvision"] = sensor_iso.predict(

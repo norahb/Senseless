@@ -79,29 +79,7 @@ class ModelCompatibilityManager:
         except Exception as e:
             print(f"❌ Failed to load adaptive model: {e}")
         
-        # Your existing fallback code here...
         return self._load_legacy_format()    
-    # def load_model_components(self) -> Tuple[Any, Any, Dict, Dict]:
-    #     """
-    #     Load model components in a unified format.
-        
-    #     Returns:
-    #     --------
-    #     tuple : (model, scaler, thresholds, feature_importance)
-    #         - model: The autoencoder model (with .autoencoder attribute)
-    #         - scaler: The data scaler
-    #         - thresholds: Dictionary of sensor thresholds
-    #         - feature_importance: Dictionary of feature importance scores
-    #     """
-    #     self.model_format = self.detect_model_format()
-        
-    #     if self.model_format == 'none':
-    #         raise FileNotFoundError(f"No model found in {self.model_dir}")
-        
-    #     if self.model_format == 'adaptive':
-    #         return self._load_adaptive_model()
-    #     else:
-    #         return self._load_legacy_model()
     
     def _load_adaptive_model(self) -> Tuple[Any, Any, Dict, Dict]:
         """Load adaptive autoencoder model."""

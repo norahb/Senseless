@@ -33,7 +33,7 @@ class SimCLR(nn.Module):
     def __init__(self, base_model='resnet18', proj_dim=128):
         super(SimCLR, self).__init__()
         self.encoder = models.__dict__[base_model](weights=None)
-        self.encoder.fc = nn.Identity()  # Remove the final fully connected layer
+        self.encoder.fc = nn.Identity()  
         
         # Projection head
         self.projector = nn.Sequential(
@@ -72,11 +72,6 @@ class ImageDataset(Dataset):
         if len(self.images) == 0:
             print(f"❌ ERROR: No images found in {root_dir}")
             print(f"Directory contents: {all_files[:10]}...")  # Show first 10 files
-        
-        # Show sample filenames for debugging
-        # sample_count = min(5, len(self.images))
-        # if sample_count > 0:
-        #     print(f"📋 Sample images: {self.images[:sample_count]}")
         
     def __len__(self):
         return len(self.images)
@@ -179,7 +174,7 @@ def train_simclr(model, train_loader, optimizer, epochs):
     print(f"✅ GPU Training completed in {training_duration:.2f} minutes")
     return training_duration
 
-# ENHANCED: KMeans clustering with comprehensive confidence scores
+# KMeans clustering with comprehensive confidence scores
 def kmeans_cluster_with_confidence(features, n_clusters=2):
     """
     Enhanced clustering with multiple confidence score types
@@ -325,7 +320,7 @@ def gmm_cluster_with_confidence(embeddings, n_components=2, pca_components=32,
         "entropy": np.asarray(entropy_conf).flatten(),
         "distance": np.asarray(dist_conf).flatten(),
         "hybrid_conf": np.asarray(hybrid_conf).flatten(),
-        "combined_confidence": np.asarray(hybrid_conf).flatten()  # always 1D, length = N
+        "combined_confidence": np.asarray(hybrid_conf).flatten()  
     }
 
     # === Debug print ===
@@ -606,7 +601,7 @@ def run_clustering_comparison(train_features, train_labels, test_features, test_
     output_dir = os.path.join("output", config.name)
     os.makedirs(output_dir, exist_ok=True)
 
-    # === NEW: Save raw clusters (true pseudo-labels) ===
+    # Save raw clusters (true pseudo-labels) ===
     df_clusters = pd.DataFrame({
         "Image_Name": all_names,
         "Cluster": final_labels,
@@ -769,14 +764,13 @@ def run(config):
     )
     print(f"📊 Split embeddings: Train={len(features_train)}, Test={len(features_test)}")
 
-    # Add this before clustering in your run() function
     print("DIAGNOSING DATA DISTRIBUTION:")
     analyze_data_distribution(gt_df, config.status_col)
 
-    # Check if your features are actually separable
+    # Check if features are actually separable
     from sklearn.manifold import TSNE
     tsne = TSNE(n_components=2, random_state=42)
-    features_2d = tsne.fit_transform(features[:1000])  # Sample for speed
+    features_2d = tsne.fit_transform(features[:1000])  
 
     import matplotlib.pyplot as plt
     colors = ['red' if label == 'Anomaly' else 'blue' for label in ground_truth_labels[:1000]]
@@ -788,11 +782,7 @@ def run(config):
     plt.close()
     print("Saved feature visualization - check if classes are separable")
     
-    # === RUN CLUSTERING COMPARISON ===
-    # comparison_results, best_method = run_clustering_comparison(
-    #     features_train, labels_train, features_test, labels_test, names_test,
-    #     features, eval_dataset.images, config
-    # )
+
     comparison_results, best_method = run_clustering_comparison(
     features_train, labels_train, features_test, labels_test, names_test,
     features, eval_dataset.images, config, gt_df)

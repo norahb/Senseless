@@ -21,7 +21,7 @@ try:
     from non_vision_subsystem import train_adaptive_autoencoder, delay_calculation, dynamic_delay_calibration, detect_anomalies, align_images, rule_based_detector
     from ssl_subsystem import ssl_train_cluster
     from label_refinement_subsystem import refine_labels
-    from camera_anomaly_detection import split_dataset, train_image_classifier, image_inference
+    from camera_anomaly_detection import split_dataset, train_image_classifier
     
 except ImportError as e:
     print(f"❌ Import error: {e}")
@@ -96,10 +96,9 @@ def main(use_case_name):
     config.detect_anomalies = False
     config.align_images = False
     config.train_ssl = False
-    config.refine_labels = True
+    config.refine_labels = False
     config.enable_image_classification_split = False
     config.train_image_classifier = False
-    # config.run_image_inference = False
 
     # === SUBSYSTEM STEPS ===
     steps = [
@@ -114,8 +113,7 @@ def main(use_case_name):
 
     image_steps = [
         ("Dataset Splitting", config.enable_image_classification_split, split_dataset),
-        ("Image Classifier Training", config.train_image_classifier, train_image_classifier),
-        ("Image Inference", config.run_image_inference, image_inference)
+        ("Image Classifier Training", config.train_image_classifier, train_image_classifier)
     ]
 
     for step_name, condition, func in steps:

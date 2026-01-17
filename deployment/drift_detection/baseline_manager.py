@@ -3,7 +3,6 @@ import sys
 import pandas as pd
 import argparse
 
-# Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from deployment.config.config_deployment import DeploymentConfig
@@ -12,15 +11,15 @@ from drift_detection.drift_detector import DriftDetector
 def update_baseline(use_case_name, data_source='sensor_data'):
     """Update drift detection baseline with current clean data"""
     print(f"\n🔄 Updating drift detection baseline for: {use_case_name.upper()}")
-    print(f"📁 Data source: {data_source}")  # Add this debug line
+    print(f"📁 Data source: {data_source}")  
     
     config = DeploymentConfig(use_case_name)
     
     if data_source == 'sensor_data':
-        print(f"🔍 Looking for sensor data at: {config.incoming_sensor_data_path}")  # Add this
+        print(f"🔍 Looking for sensor data at: {config.incoming_sensor_data_path}")  
         if os.path.exists(config.incoming_sensor_data_path):
             sensor_data = pd.read_csv(config.incoming_sensor_data_path)
-            print(f"📊 Loaded {len(sensor_data)} samples from sensor data")  # Add this
+            print(f"📊 Loaded {len(sensor_data)} samples from sensor data") 
             
             detector = DriftDetector(config)
             detector.update_reference_stats(sensor_data)
@@ -34,7 +33,6 @@ def update_baseline(use_case_name, data_source='sensor_data'):
             recent_data = pd.read_csv(config.decision_log_path)
             clean_data = recent_data[recent_data.get('Sensor_Status', 'Normal') != 'Sensor_Error']
             
-            # VALIDATION CODE HERE
             if len(clean_data) < 100:
                 print(f"⚠️ WARNING: Only {len(clean_data)} samples for baseline - recommend at least 100")
             
@@ -57,7 +55,6 @@ def update_baseline(use_case_name, data_source='sensor_data'):
         if os.path.exists(config.incoming_sensor_data_path):
             sensor_data = pd.read_csv(config.incoming_sensor_data_path)
             
-            # VALIDATION CODE HERE
             if len(sensor_data) < 100:
                 print(f"⚠️ WARNING: Only {len(sensor_data)} samples for baseline - recommend at least 100")
             

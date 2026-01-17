@@ -30,7 +30,6 @@ class ModelTrainer:
             import numpy as np
             from sklearn.model_selection import train_test_split
             from sklearn.metrics import classification_report
-            # Import cleaning config from training/config/config_manager.py
             from training.config.config_manager import get_cleaning_config
             from training.non_vision_subsystem.adaptive_autoencoder import (
                 comprehensive_training_cleaning, validate_sensor_ranges, get_default_sensor_ranges
@@ -63,11 +62,11 @@ class ModelTrainer:
             X_val = val_df[sensor_cols].values
             y_val = val_df['Label'].values
 
-            # --- 5. Apply comprehensive cleaning (disable statistical outlier cleaning) ---
+            # --- 5. Apply comprehensive cleaning ---
             cleaning_config = get_cleaning_config(self.config)
             sensor_ranges = cleaning_config.get('sensor_ranges') or get_default_sensor_ranges(sensor_cols)
             enable_cleaning = cleaning_config.get('enable_training_data_cleaning', True)
-            # Force disable statistical outlier cleaning
+
             enable_statistical_cleaning = False
             if enable_cleaning:
                 X_train, cleaning_report = comprehensive_training_cleaning(
