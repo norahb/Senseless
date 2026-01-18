@@ -40,9 +40,9 @@ else:
 USE_CASE_CONFIGS = {
     "door": UseCaseConfig(
         name="door",
-        inference_csv_path=os.path.join(base_path, "door", "Door_Data_June2025_inference_split.csv"),
-        training_csv_path=os.path.join(data_path, "sensor_data","door", "Door_Data_June2025_training_split.csv"),
-        inference_image_csv_path=os.path.join(base_path, "door", "Door_images_June2025_inference_split.csv"),
+        inference_csv_path=os.path.join(base_path, "door", "Door_inference_split.csv"),
+        training_csv_path=os.path.join(data_path, "sensor_data","door", "Door_images.csv"),
+        inference_image_csv_path=os.path.join(base_path, "door", "Door_images_inference_split.csv"),
         inference_image_folder=os.path.join(base_path, "door", "images"),
         sensor_cols=["Temperature", "Humidity", "Pressure"],
         sensor_metadata={"Temperature": "DRS", "Humidity": "DRS", "Pressure": "DRS"},
@@ -59,9 +59,9 @@ USE_CASE_CONFIGS = {
     
         "co2": UseCaseConfig(
         name="co2",
-        inference_csv_path=os.path.join(base_path, "co2", "CO2_Data_June2025_inference_split.csv"),
-        training_csv_path=os.path.join(data_path, "sensor_data","co2", "CO2_Data_June2025_training_split.csv"),
-        inference_image_csv_path=os.path.join(base_path, "co2", "CO2_images_June2025_inference_split.csv"),
+        inference_csv_path=os.path.join(base_path, "co2", "CO2_inference_split.csv"),
+        training_csv_path=os.path.join(data_path, "sensor_data","co2", "CO2_images.csv"),
+        inference_image_csv_path=os.path.join(base_path, "co2", "CO2_images_inference_split.csv"),
         inference_image_folder=os.path.join(base_path, "co2", "images","images"),
         sensor_cols=["CO2"],
         sensor_metadata={"CO2": "DRS"},
@@ -76,9 +76,9 @@ USE_CASE_CONFIGS = {
 
         "appliance": UseCaseConfig(
         name="appliance",
-        inference_csv_path=os.path.join(base_path, "appliance", "Appliance_June_2025_inference_split.csv"),
-        training_csv_path=os.path.join(data_path, "sensor_data","appliance", "Appliance_June_2025_training_split.csv"),
-        inference_image_csv_path=os.path.join(base_path, "appliance", "Appliance_images_June2025_inference_split.csv"),
+        inference_csv_path=os.path.join(base_path, "appliance", "Appliance_inference_split.csv"),
+        training_csv_path=os.path.join(data_path, "sensor_data","appliance", "Appliance_images.csv"),
+        inference_image_csv_path=os.path.join(base_path, "appliance", "Appliance_images_inference_split.csv"),
         inference_image_folder=os.path.join(base_path, "appliance", "images"),
         sensor_cols=["Temperature", "Humidity", "CO2"],
         sensor_metadata={"Temperature": "DRS", "Humidity": "DRS", "CO2": "DRS"},
@@ -94,9 +94,9 @@ USE_CASE_CONFIGS = {
     ),
         "abnormal_object": UseCaseConfig(
         name="abnormal_object",
-        inference_csv_path=os.path.join(base_path, "abnormal_object", "Abnormalobj_June_2025_inference_split.csv"),
-        training_csv_path=os.path.join(data_path, "sensor_data","abnormal_object", "Abnormalobj_June_2025_training_split.csv"),
-        inference_image_csv_path=os.path.join(base_path, "abnormal_object", "Abnormalobj_images_June2025_inference_split.csv"),
+        inference_csv_path=os.path.join(base_path, "abnormal_object", "Abnormalobj_inference_split.csv"),
+        training_csv_path=os.path.join(data_path, "sensor_data","abnormal_object", "Abnormalobj_images.csv"),
+        inference_image_csv_path=os.path.join(base_path, "abnormal_object", "Abnormalobj_images_inference_split.csv"),
         inference_image_folder=os.path.join(base_path, "abnormal_object", "images"),
         sensor_cols=["S1_distance", "S2_distance"],
         sensor_metadata={"S1_distance": "IRS", "S2_distance": "IRS"},
