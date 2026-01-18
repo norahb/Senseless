@@ -17,7 +17,7 @@ The deployment was conducted in a one-bedroom apartment with the following rooms
 
 [See floor plan below with sensor positions marked as red dots]
 
-![House Layout with Sensor Positions](./house_layout.jpg)
+<img src="./house_layout.jpg" alt="House Layout with Sensor Positions" width="400">
 
 ### Sensors & Specifications
 
