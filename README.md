@@ -15,7 +15,7 @@ The deployment was conducted in a one-bedroom apartment with the following rooms
 - **Kitchen** (1.70 m) – upper right
 - **Living Room** (5.00 m × 3.00 m) – center/lower right
 
-[See floor plan below with sensor positions marked as red dots]
+[See floor plan below with sensor positions: red circles for BME280, green squares for MH-Z16 CO₂, and blue triangles for ultrasonic sensors]
 
 <img src="./house_layout.jpg" alt="House Layout with Sensor Positions" width="400" height="430">
 
