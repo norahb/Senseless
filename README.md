@@ -36,7 +36,7 @@ The system employs readily available environmental sensors to avoid dependence o
 | Sensor | Type | Connection |
 |--------|------|-----------|
 | **Raspberry Pi Camera Module 2** | RGB Camera | Raspberry Pi |
-| **MLX90640 Thermal Camera** | IR Thermal Imaging (32×24 pixels) | Raspberry Pi |
+| **MLX90640 Thermal Camera** | Thermal Imaging (32×24 pixels) | Raspberry Pi |
 
 #### Data Acquisition Hardware
 
@@ -58,7 +58,7 @@ Four use-case-specific sensor datasets were collected from the apartment. Each d
 |---------|-------------|-------------|---------|---------|-----------|
 | **Open Door** | Door opening events and environmental changes | BME280 (temperature, humidity, pressure) | Temperature, Humidity, Pressure, Stat, Status, Date, Time, Timestamp | 1,350,000 | 97.45 MB |
 | **Appliance** | Appliance usage and environmental effects | BME280, MH-Z16 (CO₂) | Temperature, Humidity, CO₂, Stat, Status, Date, Time, Timestamp | 1,350,000 | 87.31 MB |
-| **Occupancy** | Occupancy patterns and air quality | MH-Z16 (CO₂), People counting | CO₂, People_count, Status, Date, Time, Timestamp | 1,328,527 | 68.55 MB |
+| **Occupancy** | Occupancy patterns and air quality | MH-Z16 (CO₂) | CO₂, People_count, Status, Date, Time, Timestamp | 1,328,527 | 68.55 MB |
 | **Abnormal Objects** | Objects obstructing pathways | Ultrasonic distance sensors (2x) | S1_position, S1_distance, S2_position, S2_distance, Time, Date, Timestamp, Status | 1,350,030 | 83.72 MB |
 
 ---
