@@ -5,6 +5,89 @@ During deployment, SenseLess relies primarily on non-vision sensors. The vision 
 
 ---
 
+## Experimental Setup
+
+### House Layout
+The deployment was conducted in a one-bedroom apartment with the following rooms:
+- **Bedroom** (3.00 m × 2.00 m) – lower left
+- **Bathroom** (1.50 m × 1.30 m) – center-left  
+- **Storage** (1.10 m) – left side
+- **Kitchen** (1.70 m) – upper right
+- **Living Room** (5.00 m × 3.00 m) – center/lower right
+
+[See floor plan below with sensor positions marked as red dots]
+
+![House Layout with Sensor Positions](./house_layout.jpg)
+
+### Sensors & Specifications
+
+The system employs readily available environmental sensors to avoid dependence on home-specific infrastructure. All sensor data is acquired synchronously at **1 Hz sampling rate** via an Arduino Leonardo, ensuring consistent temporal alignment across the entire apartment.
+
+#### Non-Vision Sensors
+
+| Sensor | Measurement | Placement | Sampling Rate | Notes |
+|--------|-------------|-----------|----------------|-------|
+| **Grove BME280** | Temperature, Humidity, Barometric Pressure | Kitchen, Bedroom | 1 Hz | Environmental monitoring for ambient conditions |
+| **MH-Z16 CO₂ Sensor** | Carbon Dioxide concentration (ppm) | Kitchen, Bedroom | 1 Hz | Indoor air quality; sensitive to occupancy |
+| **Grove Ultrasonic Distance Sensor** | Distance to objects in pathway | Bedroom door, Living Room entry, Corridor | 1 Hz | Detection of abnormal objects obstructing pathways |
+
+#### Vision Sensors
+
+| Sensor | Type | Connection |
+|--------|------|-----------|
+| **Raspberry Pi Camera Module 2** | RGB Camera | Raspberry Pi |
+| **MLX90640 Thermal Camera** | IR Thermal Imaging (32×24 pixels) | Raspberry Pi |
+
+#### Data Acquisition Hardware
+
+- **Microcontroller**: Arduino Leonardo (USB/Serial)
+- **Edge Device**: Raspberry Pi (Camera + thermal processing)
+- **Communication**: Serial/USB connection between Arduino and processing system
+
+#### Sensor Placement & Coverage
+All sensors are strategically positioned to monitor key areas:
+- **Kitchen**: BME280 (environmental), MH-Z16 (CO₂ – appliance/cooking detection)
+- **Bedroom**: BME280 (environmental), MH-Z16 (CO₂ - occupancy detection)
+- **Corridor**: Ultrasonic (abnormal objects obstructing pathways)
+
+### Datasets
+
+Four use-case-specific sensor datasets were collected from the apartment. Each dataset is organized per anomaly type and contains synchronized sensor readings at 1 Hz sampling rate:
+
+| Dataset | Description | Key Sensors | Columns | Records | File Size |
+|---------|-------------|-------------|---------|---------|-----------|
+| **Open Door** | Door opening events and environmental changes | BME280 (temperature, humidity, pressure) | Temperature, Humidity, Pressure, Stat, Status, Date, Time, Timestamp | 1,350,000 | 97.45 MB |
+| **Appliance** | Appliance usage and environmental effects | BME280, MH-Z16 (CO₂) | Temperature, Humidity, CO₂, Stat, Status, Date, Time, Timestamp | 1,350,000 | 87.31 MB |
+| **Occupancy** | Occupancy patterns and air quality | MH-Z16 (CO₂), People counting | CO₂, People_count, Status, Date, Time, Timestamp | 1,328,527 | 68.55 MB |
+| **Abnormal Objects** | Objects obstructing pathways | Ultrasonic distance sensors (2x) | S1_position, S1_distance, S2_position, S2_distance, Time, Date, Timestamp, Status | 1,350,030 | 83.72 MB |
+
+---
+
+## Installation & Dependencies
+
+### Requirements
+Install all required Python packages using the provided requirements file:
+
+```bash
+pip install -r requirements.txt
+```
+
+The `requirements.txt` includes all core dependencies:
+- **Data Science & ML**: numpy, pandas, scikit-learn, scipy
+- **Deep Learning**: PyTorch, torchvision
+- **Image Processing**: Pillow, OpenCV
+- **Visualization**: matplotlib
+- **Model Persistence**: joblib
+- **Hardware Communication**: pyserial (for Arduino)
+- **Utilities**: tqdm (progress bars)
+
+**Note**: Custom modules like `timmML2`, `timmML_025`, and `timmML_half` (used for specific CO₂ crowd counting models) are located in `training/models/co2/effcc_distilled_main/` and may require separate setup if you're working with the CO₂ use case.
+
+### Python Version
+Recommended: Python 3.8 or higher
+
+---
+
 ## Training pipeline (run first)
 1. **Configure training**  
    - Edit `training/config/config_manager.py` for data paths, model/save dirs, and use-case settings.
