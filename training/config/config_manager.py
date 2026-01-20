@@ -86,7 +86,8 @@ class UseCaseConfig:
     memory_buffer_size: int = 2000
 
 class ConfigManager:
-    base_path = Path(r".\Senseless\training\data")
+    # Resolve to the training/data directory relative to this file
+    base_path = Path(__file__).resolve().parent.parent / "data"
 
     configs = {
         "appliance": UseCaseConfig(
@@ -158,7 +159,7 @@ class ConfigManager:
 
         "door": UseCaseConfig(
             name="door",
-            sensor_data_path=base_path  / "sensor_data" / "Door" / "Door_training_split.csv", 
+            sensor_data_path=base_path  / "sensor_data" / "door" / "Door_training_split.csv", 
             image_data_path=base_path / "sensor_data" / "door" / "Door_images.csv",
             image_folder_path=base_path / "images" / "door" / "image_full",
             image_ssl_folder_path=base_path / "images" / "door" / "image_training_ssl_splitted_noclasses",

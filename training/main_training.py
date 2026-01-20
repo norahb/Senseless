@@ -98,7 +98,7 @@ def main(use_case_name):
     config.train_ssl = False
     config.refine_labels = False
     config.enable_image_classification_split = False
-    config.train_image_classifier = False
+    config.train_image_classifier = True
 
     # === SUBSYSTEM STEPS ===
     steps = [

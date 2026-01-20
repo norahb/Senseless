@@ -14,6 +14,7 @@ from collections import Counter
 import time
 import random
 import numpy as np
+import pandas as pd
 
 def normalize_class_names(class_data):
     """
@@ -205,6 +206,51 @@ def evaluate_model(model, test_loader, class_names, device):
     classification_report_str = classification_report(all_labels, all_preds, target_names=class_names)
     
     return test_accuracy, classification_report_str
+
+def predict_on_dataset(model, dataset, class_names, device):
+    """Run predictions on a dataset and collect results with image paths."""
+    all_image_paths = []
+    all_preds = []
+    all_pred_probs = []
+    all_true_labels = []
+    
+    model.eval()
+    with torch.no_grad():
+        for idx, (inputs, label) in enumerate(tqdm(dataset, desc="Making predictions")):
+            # Handle both tensor and image inputs
+            if isinstance(inputs, torch.Tensor):
+                inputs_batch = inputs.unsqueeze(0).to(device)
+            else:
+                inputs_batch = inputs.to(device)
+            
+            # Get image path from dataset
+            if isinstance(dataset, Subset):
+                base_dataset = dataset.dataset
+                original_idx = dataset.indices[idx]
+                image_path = base_dataset.samples[original_idx][0]
+            else:
+                image_path = dataset.samples[idx][0]
+            
+            # Forward pass
+            outputs = model(inputs_batch)
+            probs = torch.nn.functional.softmax(outputs, dim=1)
+            _, pred = torch.max(outputs, 1)
+            
+            # Store results
+            all_image_paths.append(image_path)
+            all_preds.append(class_names[pred.item()])
+            all_pred_probs.append(probs[0].max().cpu().item())
+            all_true_labels.append(class_names[label])
+    
+    # Create DataFrame
+    df = pd.DataFrame({
+        'image_path': all_image_paths,
+        'true_label': all_true_labels,
+        'predicted_label': all_preds,
+        'confidence': all_pred_probs
+    })
+    
+    return df
 
 def train_new_model(config, device, train_loader, val_loader, num_classes):
     """Train a new model from scratch."""
@@ -477,12 +523,33 @@ def run(config):
     print(f"\n📋 Test Classification Report:")
     print(test_report)
     
+    # === PREDICT ON WHOLE DATASET ===
+    print("\n🔮 Running predictions on entire dataset (train + val + test)...")
+    
+    # Combine all datasets
+    full_dataset = torch.utils.data.ConcatDataset([train_data, val_data, test_data])
+    
+    # Get predictions
+    predictions_df = predict_on_dataset(model, full_dataset, class_names, device)
+    
+    # Save predictions to training/output directory (one level up from camera_anomaly_detection)
+    output_dir = Path("../output") / config.name
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    predictions_path = output_dir / f"{config.name}_images_predictions.csv"
+    predictions_df.to_csv(predictions_path, index=False)
+    
+    print(f"✅ Saved predictions to: {predictions_path}")
+    print(f"   Total predictions: {len(predictions_df)}")
+    print(f"   Accuracy on full dataset: {(predictions_df['true_label'] == predictions_df['predicted_label']).sum() / len(predictions_df) * 100:.2f}%")
+    
     print("=" * 60)
-    print("✅ Image classifier training completed!")
+    print("✅ Image classifier training and prediction completed!")
     
     return {
         'model_path': f"models/{config.name}/{config.name}_mobilenetv2.pth",
         'test_accuracy': test_accuracy,
         'class_names': class_names,
+        'predictions_path': str(predictions_path),
         'retrained': True
     }
