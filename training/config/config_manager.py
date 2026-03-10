@@ -56,7 +56,7 @@ class UseCaseConfig:
     train_sample_fraction: float = 1
     threshold_percentile: int = 75
     threshold_factor: float = 1.2
-    max_detection_window: int = 120
+    max_detection_window: int = 60
     alignment_window_sec: int = 5  
     refinement_confidence_threshold: float = 0.60
     confidence_level = 0.95  # or adjust as needed
