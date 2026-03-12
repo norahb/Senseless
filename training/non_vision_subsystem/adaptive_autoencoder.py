@@ -1705,7 +1705,7 @@ class AdaptiveUnsupervisedAutoencoder:
         best_f1 = methods_performance[best_method]
         
         # Decision logic: use best single method if it's significantly better
-        if best_f1 > 0.1:  # Minimum threshold for usable method
+        if best_f1 > 0.5:  # Minimum threshold for usable method
             self.active_methods = [best_method]
             print(f"Selected single best method: {best_method} (F1={best_f1:.3f})")
         else:
